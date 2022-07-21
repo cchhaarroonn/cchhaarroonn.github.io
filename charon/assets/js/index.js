@@ -17,9 +17,12 @@ const videos =[
 document.title = "";
 let titles = ["c", "h", "a", "r", "o", "n", ".", "g", "a", "y"];
 let url = ["p", "u", "s", "i","-", "k", "u", "r", "a", "c"];
-let sentence = ["c", "a", "t", "f","i","s","h", "i", "n", "g", " ", "g","o", "d", "!"];
-let sentence2 = ["t", "y", " ", "v", "a","n","y", " ", "&", " ", "y","m","l ", "<","3"];
-let sentence3 = ["P", "y", "t", "h", "o", "n", ", ", "J", "a","v","a", ", ", "H", "T", "M", "L", ", ", "C", "S", "S"];
+let sentence = ["C", "a", "t", "f","i","s","h", "i", "n", "g", " ", "g","o", "d", "!"];
+let sentence2 = ["T", "y", " ", "v", "a","n","y", " ", "&", " ", "y","m","l ", "<","3"];
+let sentence3 = ["P", "y", "t", "h", "o", "n", " ", "D", "e","v","e","l","o","p","e","r"];
+let sentence4 = ["M", "e", "s", "s","i","n","g", " ", "w", "i","t", "h", " ", "k","i", "d", "s"];
+let sentence5 = ["J", "a", "v", "a", " ", "D", "e","v","e","l","o","p","e","r"];
+let sentence6 = ["W", "e", "b", " ", "D", "e","v","e","l","o","p","e","r"];
 
 async function changeTitle(){
     while(true){
@@ -86,6 +89,47 @@ async function typeWriter(){
 
         for(let i=0;i<sentence3.length;i++){
             text.innerHTML += sentence3[i];
+            await sleep(100)
+        }
+        for(let i=0;i<5;i++){
+            text.innerHTML += i%2?"|":"";
+            await sleep(500)
+            text.innerHTML = text.innerHTML.replaceAll("|", "");
+        }
+        text.innerHTML = "";
+        
+        
+        
+        
+        for(let i=0;i<sentence4.length;i++){
+            text.innerHTML += sentence4[i];
+            await sleep(100)
+        }
+        for(let i=0;i<5;i++){
+            text.innerHTML += i%2?"|":"";
+            await sleep(500)
+            text.innerHTML = text.innerHTML.replaceAll("|", "");
+        }
+        text.innerHTML = "";
+        
+        
+        
+        
+        for(let i=0;i<sentence5.length;i++){
+            text.innerHTML += sentence5[i];
+            await sleep(100)
+        }
+        for(let i=0;i<5;i++){
+            text.innerHTML += i%2?"|":"";
+            await sleep(500)
+            text.innerHTML = text.innerHTML.replaceAll("|", "");
+        }
+        text.innerHTML = "";
+        
+        
+        
+        for(let i=0;i<sentence6.length;i++){
+            text.innerHTML += sentence6[i];
             await sleep(100)
         }
         for(let i=0;i<5;i++){
