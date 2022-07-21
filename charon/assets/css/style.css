@@ -2,15 +2,15 @@
 
 body {
     background-color: black;
-    cursor: url('https://i.ibb.co/X2Jkz6r/image.png'), default;
+    cursor: url('https://bekston.net/assets/others/cursor.png'), default;
 }
 
 img:hover{
-    cursor: url('https://i.ibb.co/X2Jkz6r/image.png'), pointer;
+    cursor: url('https://bekston.net/assets/others/cursor.png'), pointer;
 }
 
 a:hover{
-    cursor: url('https://i.ibb.co/X2Jkz6r/image.png'), pointer;
+    cursor: url('https://bekston.net/assets/others/cursor.png'), pointer;
 }
 
 #vidarea {
