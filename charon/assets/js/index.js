@@ -11,7 +11,9 @@ const videos =[
     "assets/video/moon.mp4",
     "assets/video/rip.mp4",
     "assets/video/bebica.mp4",
-    "assets/video/brik.mp4"
+    "assets/video/brik.mp4",
+    "assets/video/holymoly.mp4",
+    "assets/video/slut.mp4"
 ]
 
 document.title = "";
@@ -50,7 +52,7 @@ async function changeURL(){
 
 async function randomVideo(){
     var vid = document.getElementById("vidarea");
-    vid.src = videos[Math.floor(Math.random() * 12)]
+    vid.src = videos[Math.floor(Math.random() * 14)]
     vid.loop = true;
     vid.load();
     vid.play();
