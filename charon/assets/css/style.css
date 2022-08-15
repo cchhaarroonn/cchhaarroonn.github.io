@@ -1,16 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=Lato:ital,wght@0,300;0,400;1,300;1,400&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 
+html{
+    cursor: url('https://i.ibb.co/yfwcxq0/default.png'), default;
+}
+
 body {
     background-color: black;
-    cursor: url('https://bekston.net/assets/others/cursor.png'), default;
+    cursor: url('https://i.ibb.co/yfwcxq0/default.png'), default;
 }
 
 img:hover{
-    cursor: url('https://bekston.net/assets/others/cursor.png'), pointer;
+    cursor: url('https://i.ibb.co/ChnXHqq/text.png'), pointer;
 }
 
 a:hover{
-    cursor: url('https://bekston.net/assets/others/cursor.png'), pointer;
+    cursor: url('https://i.ibb.co/ChnXHqq/text.png'), pointer;
 }
 
 #vidarea {
