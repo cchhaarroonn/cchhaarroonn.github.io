@@ -6,13 +6,12 @@ const VIDEOS = [
 ].map((name) => `charon/assets/video/${name}.mp4`);
 
 const ROLES = [
-    "Catfishing god!",
+    "Check out Kishin!",
     "Ty vany & yml <3",
-    "Python Developer",
     "Messing with kids",
     "Java Developer",
-    "Web Developer",
-    "Spigot/Bukkit Developer",
+    "Kotlin Developer",
+    "Paper/Spiggot/Bukkit Developer",
 ];
 
 const vid = document.getElementById("vidarea");
