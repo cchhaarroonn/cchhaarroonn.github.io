@@ -2,26 +2,43 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="trustpilot-one-time-domain-verification-id" content="26d6499e-dc13-4c6c-a0c5-cbfcbd5d644a"/>
+    <title>charon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap">
     <link rel="stylesheet" href="assets/css/style.css">
-    <title></title>
 </head>
-<body onload="start();">
-    <video id="vidarea" controls loop autoplay></video>
-    <h1 id="main">charon.gay</h1>
-    <p id="typewriter"></p>
-    <div class="socialmedia">
-        <a href="https://steamcommunity.com/id/charongod/">
-            <img id="steam" src="assets/img/steam.png" style="width: 5vh;">
-        </a>
-        <a href="charon#9999">
-            <img id="discord" src="assets/img/discord.png" style="width: 5vh; padding-left: 3vh;">
-        </a>
-        <a href="https://github.com/cchhaarroonn">
-            <img id="github" src="assets/img/github.png" style="width: 5vh; padding-left: 3vh;">
-        </a>
-    </div>
-<script src="assets/js/index.js"></script>
+<body>
+    <!-- background video: starts loading during the intro, plays on click -->
+    <video id="vidarea" loop playsinline preload="auto" muted></video>
+
+    <!-- intro -->
+    <section id="intro">
+        <p id="intro-text"></p>
+        <p id="skip">Click to skip...</p>
+    </section>
+
+    <!-- main -->
+    <main id="main" hidden>
+        <h1 id="name">charon.gay</h1>
+        <p id="typewriter">&nbsp;</p>
+        <div class="socialmedia">
+            <a href="https://steamcommunity.com/id/charongod/" target="_blank" rel="noopener" title="Steam">
+                <img src="charon/assets/img/steam.png" alt="Steam">
+            </a>
+            <button type="button" id="discord" title="Copy Discord tag" data-tag="charon#9999">
+                <img src="charon/assets/img/discord.png" alt="Discord">
+            </button>
+            <a href="https://github.com/cchhaarroonn" target="_blank" rel="noopener" title="GitHub">
+                <img src="charon/assets/img/github.png" alt="GitHub">
+            </a>
+        </div>
+    </main>
+
+    <div id="toast"></div>
+
+    <script src="assets/js/index.js"></script>
 </body>
 </html>
