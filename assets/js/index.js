@@ -2,7 +2,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const VIDEOS = [
     "jonsnow", "lud", "vatra", "gad", "bigdick", "look",
-    "moon", "rip", "bebica", "brik", "holymoly", "slut",
+    "moon", "rip", "bebica", "brik", "holymoly", "slut", "aedoma",
 ].map((name) => `charon/assets/video/${name}.mp4`);
 
 const ROLES = [
