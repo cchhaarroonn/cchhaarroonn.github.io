@@ -13,6 +13,7 @@
 <body>
     <!-- the "world": background video, starts loading during the intro -->
     <video id="vidarea" loop playsinline preload="auto" muted></video>
+    <canvas id="world" hidden></canvas>
     <div id="vignette"></div>
 
     <!-- intro: loading screen -->
@@ -30,20 +31,30 @@
             <h1 id="name">charon.gay</h1>
             <span id="splash"></span>
         </div>
+        <h2 id="pausetitle">Game Menu</h2>
         <nav class="menu">
+            <button class="mcbtn" type="button" id="btn-play" hidden>Play</button>
             <a class="mcbtn" href="https://steamcommunity.com/id/charongod/" target="_blank" rel="noopener">Steam</a>
             <button class="mcbtn" type="button" id="discord">Discord</button>
             <a class="mcbtn" href="https://github.com/cchhaarroonn" target="_blank" rel="noopener">GitHub</a>
             <div class="menu-row">
                 <button class="mcbtn" type="button" id="btn-music">Music: OFF</button>
-                <button class="mcbtn" type="button" id="btn-tp">Teleport</button>
+                <button class="mcbtn" type="button" id="btn-tp">Next Video</button>
             </div>
         </nav>
+        <p id="controls" class="desk">WASD move &middot; Space jump &middot; Ctrl sprint &middot; Shift sneak<br>Left click break &middot; Right click place / use &middot; 1-9 items &middot; Esc menu</p>
     </main>
+
+    <div id="death" hidden>
+        <h2>You Died!</h2>
+        <p>Ender pearls hurt.</p>
+        <button class="mcbtn" type="button" id="btn-respawn">Respawn</button>
+    </div>
 
     <!-- minecraft-style HUD -->
     <canvas id="hand3d" hidden></canvas>
     <div id="hand" hidden><img id="held" alt=""></div>
+    <div id="crosshair"></div>
     <div id="chat"></div>
     <div id="flash"></div>
     <div id="hud" hidden>
@@ -58,6 +69,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="assets/js/world.js"></script>
     <script src="assets/js/hud.js"></script>
     <script src="assets/js/index.js"></script>
 </body>
