@@ -200,7 +200,7 @@ function menu(state) {
         hudStarted = true;
         if (window.HUD) HUD.start(where, true);
         if (window.World && World.isTouch) say("Left stick moves, drag to look, II opens the menu", "#aaaaaa");
-        else say("WASD move, Space jump, LMB break, RMB place/use, Esc menu", "#aaaaaa");
+        else say("WASD move, Shift sprint, Ctrl crouch, LMB break/attack, RMB place/use, Esc menu", "#aaaaaa");
     }
 }
 
