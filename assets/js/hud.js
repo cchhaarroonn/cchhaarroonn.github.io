@@ -2,8 +2,8 @@
 // All pixel art is original and drawn in code - no external textures.
 (() => {
     /* ================= settings ================= */
-    const LEVEL = 69;          // number above the XP bar
-    const XP_FILL = 0.62;      // 0..1
+    let LEVEL = 69;            // number above the XP bar (goes up as you kill mobs)
+    let XP_FILL = 0.62;        // 0..1
     const MAX_HEALTH = 20;     // 10 hearts
     const FOOD = 10;
 
@@ -247,13 +247,25 @@
         });
         $("hearts").classList.toggle("low", health <= 4);
     }
-    function damage(n) {
+    function damage(n, cause) {
+        if (health <= 0) return;
         health = Math.max(0, health - n);
         drawHearts();
         hud.classList.remove("hurt");
         void hud.offsetWidth;
         hud.classList.add("hurt");
-        if (health === 0 && window.World) World.die();
+        if (health === 0 && window.World) World.die(cause);
+    }
+
+    function addXP(n) {
+        XP_FILL += n * 0.08;
+        while (XP_FILL >= 1) {
+            XP_FILL -= 1;
+            LEVEL++;
+            say(`Level up! You are now level ${LEVEL}`, "#80ff20");
+        }
+        $("level").textContent = LEVEL;
+        $("xpfill").style.width = XP_FILL * 100 + "%";
     }
     function heal(n) {
         health = Math.min(MAX_HEALTH, health + n);
@@ -541,6 +553,7 @@
         swing,
         damage,
         heal,
+        addXP,
         useItem: use,
         selectedId: () => SLOTS[selected],
         blockOf: (id) => (id && ITEMS[id] && ITEMS[id].kind === "block" ? ITEMS[id].block : 0),
