@@ -268,29 +268,32 @@
 
     const height = () => (sneak ? 1.5 : 1.8);
 
-    function collides(x, y, z) {
-        const x0 = Math.floor(x - 0.3), x1 = Math.floor(x + 0.3);
-        const y0 = Math.floor(y), y1 = Math.floor(y + height() - 0.001);
-        const z0 = Math.floor(z - 0.3), z1 = Math.floor(z + 0.3);
+    // does a box (half-width hw, height h, feet at y) overlap any solid block?
+    function boxHits(x, y, z, hw, h) {
+        const x0 = Math.floor(x - hw), x1 = Math.floor(x + hw);
+        const y0 = Math.floor(y), y1 = Math.floor(y + h - 0.001);
+        const z0 = Math.floor(z - hw), z1 = Math.floor(z + hw);
         for (let bx = x0; bx <= x1; bx++)
             for (let by = y0; by <= y1; by++)
                 for (let bz = z0; bz <= z1; bz++)
                     if (get(bx, by, bz) !== AIR) return true;
         return false;
     }
+    const collides = (x, y, z) => boxHits(x, y, z, 0.3, height());
 
-    // moves along one axis in small steps, stops at the first collision
-    function move(axis, d) {
+    // moves a body along one axis in small steps, stops at the first collision
+    function moveBody(b, hw, h, axis, d) {
         if (!d) return false;
         const steps = Math.ceil(Math.abs(d) / 0.01), s = d / steps;
         for (let i = 0; i < steps; i++) {
-            const n = { x: P.x, y: P.y, z: P.z };
+            const n = { x: b.x, y: b.y, z: b.z };
             n[axis] += s;
-            if (collides(n.x, n.y, n.z)) return true;
-            P[axis] = n[axis];
+            if (boxHits(n.x, n.y, n.z, hw, h)) return true;
+            b[axis] = n[axis];
         }
         return false;
     }
+    const move = (axis, d) => moveBody(P, 0.3, height(), axis, d);
 
     function updatePlayer(dt) {
         let fx = 0, fz = 0;
@@ -302,15 +305,16 @@
         fz += touchMove.y;
         const len = Math.hypot(fx, fz);
         if (len > 1) { fx /= len; fz /= len; }
-        sneak = !!(keys.ShiftLeft || keys.ShiftRight);
-        if (fz >= 0 || sneak) sprint = sprint && fz < 0 && !sneak;
-        if (keys.ControlLeft || keys.ControlRight) sprint = fz < 0 && !sneak;
+        sneak = !!(keys.ControlLeft || keys.ControlRight || keys.KeyC);
+        if (keys.ShiftLeft || keys.ShiftRight) sprint = fz < 0 && !sneak;
+        else if (fz >= 0 || sneak) sprint = false;
 
         const speed = sneak ? 1.3 : sprint ? 5.6 : 4.3;
         const sin = Math.sin(P.yaw), cos = Math.cos(P.yaw);
         const tx = (fx * cos + fz * sin) * speed;
         const tz = (-fx * sin + fz * cos) * speed;
-        const k = Math.min(1, dt * (P.onGround ? 12 : 3));
+        P.kb = Math.max(0, (P.kb || 0) - dt);
+        const k = Math.min(1, dt * (P.kb > 0 ? 1 : P.onGround ? 12 : 3));
         P.vx += (tx - P.vx) * k;
         P.vz += (tz - P.vz) * k;
 
@@ -378,7 +382,7 @@
         let tz = d.z ? (sz > 0 ? z + 1 - o.z : o.z - z) * dz : Infinity;
         let n = [0, 0, 0], t = 0;
         while (t <= maxDist) {
-            if (inside(x, y, z) && data[idx(x, y, z)] !== AIR) return { x, y, z, n };
+            if (inside(x, y, z) && data[idx(x, y, z)] !== AIR) return { x, y, z, n, t };
             if (tx < ty && tx < tz) { x += sx; t = tx; tx += dx; n = [-sx, 0, 0]; }
             else if (ty < tz) { y += sy; t = ty; ty += dy; n = [0, -sy, 0]; }
             else { z += sz; t = tz; tz += dz; n = [0, 0, -sz]; }
@@ -422,6 +426,8 @@
     function attack() {
         if (window.HUD) HUD.swing();
         const h = raycast();
+        const mh = rayMob(4);
+        if (mh && (!h || mh.t < h.t)) { hitMob(mh.m); return; }
         if (!h) return;
         const t = data[idx(h.x, h.y, h.z)];
         if (BLOCKS[t] && BLOCKS[t].unbreakable) return;
@@ -478,10 +484,263 @@
             for (let i = 0; i < 40 && collides(tx, ty, tz); i++) ty += 0.25;
             if (!collides(tx, ty, tz)) {
                 Object.assign(P, { x: tx, y: ty, z: tz, vx: 0, vy: 0, vz: 0 });
-                if (window.HUD) { HUD.teleportFlash(); HUD.damage(5); }
+                if (window.HUD) { HUD.teleportFlash(); HUD.damage(5, "Ender pearls hurt."); }
             }
             return false;
         });
+    }
+
+
+    /* ================= sky ================= */
+    function addStars() {
+        const pos = [], r = rand(99);
+        for (let i = 0; i < 700; i++) {
+            const a = r() * Math.PI * 2, e = 0.12 + r() * 1.3, R = 140;
+            pos.push(W / 2 + Math.cos(a) * Math.cos(e) * R, Math.sin(e) * R, D / 2 + Math.sin(a) * Math.cos(e) * R);
+        }
+        const g = new THREE.BufferGeometry();
+        g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+        scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffffff, size: 0.7, sizeAttenuation: true })));
+    }
+
+    /* ================= mobs (original designs) ================= */
+    const MAX_MOBS = 12, SPAWN_EVERY = 20;
+    let mobs = [], spawnTimer = 0;
+
+    function part(g, w, h, d, color, x, y, z, opts = {}) {
+        const mat = opts.glow
+            ? new THREE.MeshBasicMaterial({ color })
+            : new THREE.MeshLambertMaterial({ color, transparent: !!opts.opacity, opacity: opts.opacity || 1 });
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+        m.position.set(x, y, z);
+        g.add(m);
+        return m;
+    }
+    // a limb that swings from its top (hip / shoulder)
+    function limb(g, w, h, d, color, x, y, z) {
+        const pivot = new THREE.Group();
+        pivot.position.set(x, y, z);
+        part(pivot, w, h, d, color, 0, -h / 2, 0);
+        g.add(pivot);
+        return pivot;
+    }
+
+    const MOBS = {
+        shade: {
+            name: "Shade", hostile: true, hp: 12, speed: 2.3, dmg: 3, hw: 0.3, h: 1.9, xp: 5, color: "#2b2140",
+            build(g) {
+                const legs = [limb(g, 0.24, 0.8, 0.24, "#15151d", -0.13, 0.8, 0), limb(g, 0.24, 0.8, 0.24, "#15151d", 0.13, 0.8, 0)];
+                part(g, 0.52, 0.8, 0.3, "#2b2140", 0, 1.2, 0);
+                part(g, 0.6, 0.12, 0.36, "#1d1630", 0, 0.86, 0);
+                const arms = [limb(g, 0.2, 0.72, 0.2, "#2b2140", -0.36, 1.56, 0), limb(g, 0.2, 0.72, 0.2, "#2b2140", 0.36, 1.56, 0)];
+                part(g, 0.5, 0.5, 0.5, "#3b3b4a", 0, 1.85, 0);
+                part(g, 0.56, 0.16, 0.56, "#1d1630", 0, 2.1, 0);
+                part(g, 0.1, 0.06, 0.02, "#7ffcff", -0.11, 1.88, 0.26, { glow: true });
+                part(g, 0.1, 0.06, 0.02, "#7ffcff", 0.11, 1.88, 0.26, { glow: true });
+                return { legs, arms };
+            },
+        },
+        gloop: {
+            name: "Gloop", hostile: true, hp: 8, speed: 3.2, dmg: 2, hw: 0.45, h: 0.9, xp: 3, hop: true, color: "#9a46d1",
+            build(g) {
+                part(g, 0.45, 0.45, 0.45, "#4b1872", 0, 0.42, 0);
+                part(g, 0.9, 0.9, 0.9, "#9a46d1", 0, 0.45, 0, { opacity: 0.72 });
+                part(g, 0.12, 0.14, 0.02, "#111", -0.18, 0.58, 0.46);
+                part(g, 0.12, 0.14, 0.02, "#111", 0.18, 0.58, 0.46);
+                part(g, 0.2, 0.05, 0.02, "#111", 0, 0.36, 0.46);
+                return { legs: [], arms: [] };
+            },
+        },
+        boar: {
+            name: "Boar", hostile: false, hp: 10, speed: 1.5, hw: 0.45, h: 0.9, xp: 2, color: "#7b4f2e",
+            build(g) {
+                part(g, 0.7, 0.55, 1.0, "#7b4f2e", 0, 0.64, 0);
+                part(g, 0.3, 0.1, 0.8, "#4a2e18", 0, 0.95, -0.05);
+                part(g, 0.5, 0.45, 0.4, "#6e4527", 0, 0.72, 0.66);
+                part(g, 0.26, 0.18, 0.08, "#4a2e18", 0, 0.64, 0.89);
+                part(g, 0.05, 0.14, 0.05, "#eeeeee", -0.15, 0.56, 0.88);
+                part(g, 0.05, 0.14, 0.05, "#eeeeee", 0.15, 0.56, 0.88);
+                part(g, 0.07, 0.07, 0.02, "#111", -0.15, 0.82, 0.86);
+                part(g, 0.07, 0.07, 0.02, "#111", 0.15, 0.82, 0.86);
+                const legs = [[-0.22, 0.32], [0.22, 0.32], [-0.22, -0.32], [0.22, -0.32]]
+                    .map(([x, z]) => limb(g, 0.18, 0.38, 0.18, "#5c3a20", x, 0.38, z));
+                return { legs, arms: [], quad: true };
+            },
+        },
+        duck: {
+            name: "Duck", hostile: false, hp: 4, speed: 1.2, hw: 0.25, h: 0.7, xp: 1, color: "#f2f2f2",
+            build(g) {
+                part(g, 0.36, 0.3, 0.5, "#f2f2f2", 0, 0.38, 0);
+                part(g, 0.2, 0.12, 0.14, "#dddddd", 0, 0.48, -0.3);
+                part(g, 0.24, 0.26, 0.24, "#2f7d3a", 0, 0.64, 0.2);
+                part(g, 0.16, 0.07, 0.14, "#f0a020", 0, 0.6, 0.38);
+                part(g, 0.04, 0.04, 0.02, "#111", -0.08, 0.68, 0.33);
+                part(g, 0.04, 0.04, 0.02, "#111", 0.08, 0.68, 0.33);
+                const legs = [limb(g, 0.05, 0.24, 0.05, "#f0a020", -0.08, 0.24, 0), limb(g, 0.05, 0.24, 0.05, "#f0a020", 0.08, 0.24, 0)];
+                return { legs, arms: [] };
+            },
+        },
+    };
+
+    function surfaceAt(x, z) {
+        let y = H - 1;
+        while (y > 0 && get(x, y, z) === AIR) y--;
+        return y;     // the top solid block
+    }
+
+    function spawnMob(type) {
+        if (mobs.length >= MAX_MOBS) return null;
+        const keys = Object.keys(MOBS);
+        type = type || keys[Math.floor(Math.random() * keys.length)];
+        const def = MOBS[type];
+        for (let i = 0; i < 40; i++) {
+            const x = 2 + Math.random() * (W - 4), z = 2 + Math.random() * (D - 4);
+            if (Math.hypot(x - P.x, z - P.z) < 10) continue;
+            const top = surfaceAt(Math.floor(x), Math.floor(z));
+            if (get(Math.floor(x), top, Math.floor(z)) === LEAVES || top > H - 4) continue;
+            if (boxHits(x, top + 1, z, def.hw, def.h)) continue;
+            const g = new THREE.Group();
+            const parts = def.build(g);
+            g.traverse((o) => { if (o.material && o.material.emissive) o.userData.lambert = true; });
+            scene.add(g);
+            const m = { type, def, g, ...parts, x, y: top + 1, z, vx: 0, vy: 0, vz: 0, onGround: false, hp: def.hp,
+                        yaw: Math.random() * 6.28, t: 0, dir: null, hurt: 0, panic: 0, kb: 0, cd: 0, hop: 0, walk: 0, squash: 1 };
+            mobs.push(m);
+            return m;
+        }
+        return null;
+    }
+
+    function removeMob(m) {
+        scene.remove(m.g);
+        mobs = mobs.filter((x) => x !== m);
+    }
+    function clearMobs() {
+        mobs.slice().forEach(removeMob);
+        spawnMob("boar");
+        spawnMob("duck");
+    }
+
+    // ray vs. mob boxes, returns the nearest hit within reach
+    function rayMob(maxDist) {
+        const o = { x: P.x, y: P.y + (sneak ? 1.27 : 1.62), z: P.z }, d = lookDir();
+        let best = null;
+        for (const m of mobs) {
+            const min = [m.x - m.def.hw, m.y, m.z - m.def.hw], max = [m.x + m.def.hw, m.y + m.def.h, m.z + m.def.hw];
+            let t0 = 0, t1 = maxDist, ok = true;
+            [["x", 0], ["y", 1], ["z", 2]].forEach(([a, i]) => {
+                if (!ok) return;
+                if (Math.abs(d[a]) < 1e-9) { if (o[a] < min[i] || o[a] > max[i]) ok = false; return; }
+                let ta = (min[i] - o[a]) / d[a], tb = (max[i] - o[a]) / d[a];
+                if (ta > tb) [ta, tb] = [tb, ta];
+                t0 = Math.max(t0, ta); t1 = Math.min(t1, tb);
+                if (t0 > t1) ok = false;
+            });
+            if (ok && (!best || t0 < best.t)) best = { m, t: t0 };
+        }
+        return best;
+    }
+
+    function hitMob(m) {
+        const sword = window.HUD && HUD.selectedId() === "sword";
+        m.hp -= sword ? (sprint ? 9 : 6) : 1;
+        m.hurt = 0.3;
+        const dx = m.x - P.x, dz = m.z - P.z, l = Math.hypot(dx, dz) || 1;
+        m.vx = (dx / l) * 7; m.vz = (dz / l) * 7; m.vy = 5; m.kb = 0.35;
+        if (!m.def.hostile) m.panic = 4;
+        if (m.hp <= 0) {
+            burst(m.x - 0.5, m.y + m.def.h / 2 - 0.5, m.z - 0.5, m.def.color);
+            burst(m.x - 0.5, m.y + m.def.h / 2 - 0.5, m.z - 0.5, "#dddddd");
+            removeMob(m);
+            if (window.HUD) HUD.addXP(m.def.xp);
+        }
+    }
+
+    function updateMobs(dt) {
+        if (state === "playing") {
+            spawnTimer += dt;
+            if (spawnTimer >= SPAWN_EVERY) {
+                spawnTimer = 0;
+                const m = spawnMob();
+                if (m && window.HUD) HUD.say(`A ${m.def.name} appeared somewhere...`, m.def.hostile ? "#ff8080" : "#aaaaaa");
+            }
+        }
+        for (const m of mobs.slice()) {
+            const def = m.def;
+            const dx = P.x - m.x, dz = P.z - m.z, dist = Math.hypot(dx, dz) || 1;
+            let tx = 0, tz = 0, sp = def.speed;
+            const chasing = def.hostile && state === "playing" && dist < 18;
+            if (chasing) { tx = dx / dist; tz = dz / dist; }
+            else if (m.panic > 0) { m.panic -= dt; tx = -dx / dist; tz = -dz / dist; sp *= 2.2; }
+            else {
+                m.t -= dt;
+                if (m.t <= 0) {
+                    m.t = 2 + Math.random() * 3;
+                    const a = Math.random() * Math.PI * 2;
+                    m.dir = Math.random() < 0.35 ? null : [Math.sin(a), Math.cos(a)];
+                }
+                if (m.dir) { tx = m.dir[0]; tz = m.dir[1]; sp *= 0.5; }
+            }
+
+            m.kb = Math.max(0, m.kb - dt);
+            if (def.hop) {
+                m.hop -= dt;
+                if (m.onGround && m.kb <= 0) {
+                    m.vx = 0; m.vz = 0;
+                    if (m.hop <= 0 && (tx || tz)) {
+                        m.vy = 6.5; m.vx = tx * sp; m.vz = tz * sp;
+                        m.hop = 0.6 + Math.random() * 0.8;
+                    }
+                }
+            } else if (m.kb <= 0) {
+                const k = Math.min(1, dt * (m.onGround ? 8 : 2));
+                m.vx += (tx * sp - m.vx) * k;
+                m.vz += (tz * sp - m.vz) * k;
+            }
+
+            m.vy = Math.max(m.vy - 28 * dt, -50);
+            const hitX = moveBody(m, def.hw, def.h, "x", m.vx * dt);
+            const hitZ = moveBody(m, def.hw, def.h, "z", m.vz * dt);
+            const wasGround = m.onGround;
+            const hitY = moveBody(m, def.hw, def.h, "y", m.vy * dt);
+            m.onGround = false;
+            if (hitY) { if (m.vy < 0) m.onGround = true; m.vy = 0; }
+            else if (m.vy <= 0 && boxHits(m.x, m.y - 0.02, m.z, def.hw, def.h)) m.onGround = true;
+            if ((hitX || hitZ) && m.onGround && !def.hop) m.vy = 7.5;        // hop up one block
+            if (!wasGround && m.onGround && def.hop) m.squash = 0.65;
+
+            // face the way it's moving
+            const hs = Math.hypot(m.vx, m.vz);
+            if (hs > 0.2 && m.kb <= 0) {
+                const want = Math.atan2(m.vx, m.vz);
+                let diff = want - m.yaw;
+                diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+                m.yaw += diff * Math.min(1, dt * 8);
+            } else if (chasing) m.yaw = Math.atan2(dx, dz);
+
+            // animate
+            m.walk += hs * dt * 5;
+            const swing = Math.sin(m.walk) * 0.7 * Math.min(1, hs / 1.5);
+            m.legs.forEach((l, i) => (l.rotation.x = (m.quad ? (i === 0 || i === 3) : i === 0) ? swing : -swing));
+            m.arms.forEach((a, i) => (a.rotation.x = i === 0 ? -swing : swing));
+            m.squash += (1 - m.squash) * Math.min(1, dt * 10);
+            const air = def.hop && !m.onGround ? 1.12 : 1;
+            m.g.scale.set(1 / Math.sqrt(m.squash * air), m.squash * air, 1 / Math.sqrt(m.squash * air));
+            m.g.position.set(m.x, m.y, m.z);
+            m.g.rotation.y = m.yaw;
+
+            m.hurt = Math.max(0, m.hurt - dt);
+            m.g.traverse((o) => { if (o.userData.lambert) o.material.emissive.setRGB(m.hurt > 0 ? 0.6 : 0, 0, 0); });
+
+            // hostile mobs hit you when they're close
+            m.cd = Math.max(0, m.cd - dt);
+            if (def.hostile && state === "playing" && m.cd <= 0 &&
+                dist < def.hw + 0.75 && P.y < m.y + def.h && m.y < P.y + 1.8) {
+                m.cd = 1;
+                P.vx = (dx / dist) * 7; P.vz = (dz / dist) * 7; P.vy = 5; P.kb = 0.3;
+                if (window.HUD) HUD.damage(def.dmg, `Slain by a ${def.name}.`);
+            }
+        }
     }
 
     /* ================= sound: video gets louder near the walls ================= */
@@ -522,8 +781,9 @@
         if (state === "playing") setState("paused");
     }
 
-    function die() {
+    function die(reason) {
         setState("dead");
+        document.querySelector("#death p").textContent = reason || "Ouch.";
         if (document.pointerLockElement) document.exitPointerLock();
         document.getElementById("death").hidden = false;
     }
@@ -531,6 +791,7 @@
     function respawn() {
         document.getElementById("death").hidden = true;
         spawn();
+        clearMobs();
         if (window.HUD) HUD.heal(20);
         state = "paused";
         play();
@@ -552,7 +813,8 @@
             lastW = performance.now();
         }
         keys[e.code] = true;
-        if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
+        // stop the browser reacting to game keys (Ctrl+S, Ctrl+D, space scrolling...)
+        if (e.ctrlKey || ["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
     });
     document.addEventListener("keyup", (e) => { keys[e.code] = false; });
 
@@ -633,6 +895,10 @@
         touchUI.addEventListener("touchcancel", end);
     }
 
+    addEventListener("beforeunload", (e) => {
+        if (state === "playing") { e.preventDefault(); e.returnValue = ""; }
+    });
+
     /* ================= main loop ================= */
     let last = performance.now();
     function loop(now) {
@@ -643,6 +909,7 @@
         updateCamera(now, dt);
         updateParticles(dt);
         updatePearls(dt);
+        if (state === "playing" || state === "title") updateMobs(dt);
         updateTarget();
         updateVolume();
         renderer.render(scene, camera);
@@ -664,7 +931,12 @@
         }
         renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
         scene = new THREE.Scene();
-        scene.background = new THREE.Color("#7fa9ff");
+        scene.background = new THREE.Color("#000000");
+        addStars();
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const sun = new THREE.DirectionalLight(0xffffff, 0.45);
+        sun.position.set(0.4, 1, 0.3);
+        scene.add(sun);
         camera = new THREE.PerspectiveCamera(70, 1, 0.05, 200);
         camera.rotation.order = "YXZ";
 
@@ -673,6 +945,8 @@
         rebuild();
         buildWalls();
         spawn();
+        spawnMob("boar");
+        spawnMob("duck");
 
         outline = new THREE.LineSegments(
             new THREE.EdgesGeometry(new THREE.BoxGeometry(1.004, 1.004, 1.004)),
@@ -698,6 +972,7 @@
         pause,
         die,
         throwPearl,
+        spawnMob: (type) => spawnMob(type),
         isTouch,
         playing: () => state === "playing",
         active: () => !!renderer,
