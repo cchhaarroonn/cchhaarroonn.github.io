@@ -163,6 +163,7 @@ function enter() {
     intro.classList.add("out");
     setTimeout(() => intro.remove(), 600);
     main.hidden = false;
+    if (window.HUD) HUD.start();
 
     animateTitle("charon.gay");
     animateHash("pusi-kurac");
