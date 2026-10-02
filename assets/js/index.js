@@ -31,6 +31,7 @@ const loadFill = $("loadfill");
 const main = $("main");
 const splash = $("splash");
 const musicBtn = $("btn-music");
+const playBtn = $("btn-play");
 
 let entered = false;
 let where = "";
@@ -185,7 +186,25 @@ async function copyDiscord() {
     }
 }
 
-window.Site = { teleport, cycleMusic, musicOn, copyDiscord };
+/* ---------------- menu: title screen / pause menu ---------------- */
+
+let hudStarted = false;
+
+// called by the 3D world whenever its state changes
+function menu(state) {
+    const show = state === "title" || state === "paused";
+    main.hidden = !show;
+    main.classList.toggle("paused", state === "paused");
+    playBtn.textContent = state === "paused" ? "Back to Game" : "Play";
+    if (state === "playing" && !hudStarted) {
+        hudStarted = true;
+        if (window.HUD) HUD.start(where, true);
+        if (window.World && World.isTouch) say("Left stick moves, drag to look, II opens the menu", "#aaaaaa");
+        else say("WASD move, Space jump, LMB break, RMB place/use, Esc menu", "#aaaaaa");
+    }
+}
+
+window.Site = { teleport, cycleMusic, musicOn, copyDiscord, menu };
 
 /* ---------------- intro (loading screen) ---------------- */
 
@@ -245,8 +264,15 @@ function enter() {
 
     intro.classList.add("out");
     setTimeout(() => intro.remove(), 600);
-    main.hidden = false;
-    if (window.HUD) HUD.start(where);
+
+    // the 3D world if the browser can do WebGL, otherwise the flat title screen
+    if (window.World && World.init()) {
+        document.body.classList.add("world");
+        playBtn.hidden = false;
+    } else {
+        main.hidden = false;
+        if (window.HUD) HUD.start(where);
+    }
 
     animateTitle("charon.gay");
     animateHash("pusi-kurac");
@@ -256,6 +282,7 @@ function enter() {
 $("discord").addEventListener("click", copyDiscord);
 musicBtn.addEventListener("click", cycleMusic);
 $("btn-tp").addEventListener("click", teleport);
+playBtn.addEventListener("click", () => window.World && World.play());
 
 intro.addEventListener("click", enter);
 document.addEventListener("keydown", (e) => {
