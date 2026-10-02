@@ -1,7 +1,7 @@
 :root {
     --text: #f1f1f1;
-    --cursor: url('https://i.ibb.co/yfwcxq0/default.png'), default;
-    --pointer: url('https://i.ibb.co/gFtJHZV/pointer.png'), pointer;
+    --pixel: 'Press Start 2P', monospace;
+    --u: min(3px, calc((100vw - 16px) / 182));   /* one HUD "texture pixel" */
 }
 
 * { box-sizing: border-box; }
@@ -11,12 +11,14 @@ html, body {
     height: 100%;
     background: #000;
     color: var(--text);
-    font-family: 'Lato', sans-serif;
-    cursor: var(--cursor);
+    font-family: var(--pixel);
+    cursor: var(--cursor, crosshair);
     overflow: hidden;
+    -webkit-font-smoothing: none;
 }
+button, a { cursor: var(--cursor, pointer); font: inherit; color: inherit; }
 
-/* ---------- background video ---------- */
+/* ================= the world: background video ================= */
 #vidarea {
     position: fixed;
     inset: 0;
@@ -24,35 +26,78 @@ html, body {
     height: 100%;
     object-fit: cover;
     pointer-events: none;
-    filter: blur(17px);
-    transform: scale(1.12);          /* hides the dark blurred edges */
+    filter: blur(9px) saturate(1.1);
+    transform: scale(1.12);
     opacity: 0;
     transition: opacity 1.2s ease;
     z-index: 0;
 }
 #vidarea.on { opacity: 1; }
 
-/* ---------- intro ---------- */
+#vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, .65) 100%);
+}
+
+/* ================= intro: loading screen ================= */
 #intro {
     position: fixed;
     inset: 0;
-    z-index: 2;
-    background: #000;
+    z-index: 10;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background:
+        linear-gradient(rgba(0, 0, 0, .55), rgba(0, 0, 0, .55)),
+        var(--dirt, #2a1d14);
+    background-size: auto, 64px 64px;
+    image-rendering: pixelated;
     transition: opacity .6s ease;
 }
 #intro.out { opacity: 0; pointer-events: none; }
 
-#intro p {
-    position: absolute;
-    left: 1rem;
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 400;
+.loading {
+    width: min(560px, 92vw);
+    text-align: center;
 }
-#intro-text { top: 1rem; white-space: pre; }
-#skip { bottom: 1rem; opacity: .7; }
+#intro-text {
+    min-height: 3em;
+    margin: 0 0 1.4rem;
+    font-size: clamp(10px, 2.4vw, 15px);
+    line-height: 1.6;
+    text-shadow: 2px 2px 0 #3f3f3f;
+}
+#loadbar {
+    height: 10px;
+    border: 2px solid #fff;
+    padding: 2px;
+}
+#loadfill {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: #fff;
+    transition: width 1.2s steps(12);
+}
+#intro.done #loadbar { animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .45; } }
 
-/* ---------- main ---------- */
+#skip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 1.2rem;
+    margin: 0;
+    text-align: center;
+    font-size: 10px;
+    color: #a0a0a0;
+    text-shadow: 2px 2px 0 #2a2a2a;
+}
+
+/* ================= main: title screen ================= */
 #main {
     position: relative;
     z-index: 1;
@@ -61,82 +106,93 @@ html, body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    padding: 0 1rem;
-    text-shadow: 2px 2px #000;
+    gap: clamp(28px, 6vh, 56px);
+    padding: 1rem 1rem calc(70 * var(--u) + 2rem);
     animation: fadein 1s ease both;
 }
 #main[hidden] { display: none; }
 
+#title { position: relative; text-align: center; margin-bottom: clamp(18px, 5vh, 44px); }
+
 #name {
     margin: 0;
-    font-size: 2.5rem;
-    font-weight: 500;
+    font-size: clamp(26px, 7vw, 64px);
+    letter-spacing: .02em;
+    color: #e6e6e6;
+    text-shadow:
+        0 4px 0 #8a8a8a,
+        0 8px 0 #4a4a4a,
+        0 12px 0 #1c1c1c,
+        0 18px 24px rgba(0, 0, 0, .6);
 }
 
-#typewriter {
-    margin: .6rem 0 0;
-    min-height: 1.4em;
-    font-weight: 300;
-    font-size: 1rem;
+#splash {
+    position: absolute;
+    right: -5%;
+    bottom: -2em;
+    font-size: clamp(9px, 1.6vw, 14px);
+    color: #ffff00;
+    text-shadow: 2px 2px 0 #3f3f00;
+    white-space: nowrap;
+    transform: rotate(-18deg);
+    transform-origin: center;
+    animation: pulse .5s ease-in-out infinite alternate;
 }
+#splash.pop { animation: popin .25s ease-out, pulse .5s ease-in-out .25s infinite alternate; }
+@keyframes pulse { from { transform: rotate(-18deg) scale(1); } to { transform: rotate(-18deg) scale(1.08); } }
+@keyframes popin { from { transform: rotate(-18deg) scale(.2); } to { transform: rotate(-18deg) scale(1); } }
 
-.socialmedia {
+/* ---------- minecraft-style buttons ---------- */
+.menu {
     display: flex;
-    gap: 3vh;
-    margin-top: 6vh;
+    flex-direction: column;
+    gap: 8px;
+    width: min(400px, 88vw);
 }
-.socialmedia a,
-.socialmedia button {
+.menu-row { display: flex; gap: 8px; }
+.menu-row .mcbtn { flex: 1; }
+
+.mcbtn {
     display: block;
+    width: 100%;
     padding: 0;
-    border: 0;
-    background: none;
-    cursor: var(--pointer);
+    height: 40px;
+    line-height: 34px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 12px;
+    color: #e0e0e0;
+    text-shadow: 2px 2px 0 #383838;
+    background: #6f6f6f;
+    border: 2px solid #000;
+    box-shadow:
+        inset 2px 2px 0 #a9a9a9,
+        inset -2px -4px 0 #4c4c4c;
+    image-rendering: pixelated;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-.socialmedia img {
-    display: block;
-    width: 5vh;
-    min-width: 32px;
-    height: auto;
-    filter: drop-shadow(1px 1px 0 #000);
-    transition: transform .15s ease;
+.mcbtn:hover,
+.mcbtn:focus-visible {
+    outline: none;
+    color: #ffffa0;
+    background: #7b86b8;
+    border-color: #fff;
+    box-shadow:
+        inset 2px 2px 0 #b3bde6,
+        inset -2px -4px 0 #4f5a8a;
 }
-.socialmedia img:hover { transform: scale(1.1); }
+.mcbtn:active { transform: translateY(1px); }
 
-/* ---------- toast ---------- */
-#toast {
-    position: fixed;
-    left: 50%;
-    bottom: 2rem;
-    transform: translate(-50%, 1rem);
-    padding: .5rem 1rem;
-    border-radius: 6px;
-    background: rgba(0, 0, 0, .7);
-    font-size: .9rem;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .2s, transform .2s;
-    z-index: 3;
-}
-#toast.show { opacity: 1; transform: translate(-50%, 0); }
-
-@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
-
-@media (prefers-reduced-motion: reduce) {
-    #vidarea, #intro, #main, #toast { transition: none; animation: none; }
-}
-
-/* ================= minecraft-style HUD ================= */
+/* ================= HUD ================= */
 #hud {
-    --u: min(3px, calc((100vw - 16px) / 182));   /* one "texture pixel" */
     position: fixed;
     left: 50%;
     bottom: calc(2 * var(--u));
     width: calc(182 * var(--u));
     transform: translateX(-50%);
     z-index: 4;
-    font-family: 'Press Start 2P', monospace;
     image-rendering: pixelated;
     opacity: 0;
     transition: opacity .8s ease .3s;
@@ -145,28 +201,41 @@ html, body {
 #hud.on { opacity: 1; }
 #hud[hidden], #hand[hidden], #hand3d[hidden] { display: none; }
 
-#itemname {
+#nowplaying, #itemname {
     text-align: center;
-    color: #fff;
-    font-size: calc(6 * var(--u));
-    text-shadow: var(--u) var(--u) 0 #3a3a3a;
-    min-height: calc(8 * var(--u));
-    margin-bottom: calc(6 * var(--u));
+    font-size: calc(5 * var(--u));
+    min-height: calc(7 * var(--u));
+    margin-bottom: calc(3 * var(--u));
+    white-space: nowrap;
     opacity: 0;
-    transition: opacity .4s ease;
+    transition: opacity .5s ease;
 }
-#itemname.show { opacity: 1; transition: none; }
+#nowplaying.show, #itemname.show { opacity: 1; transition: none; }
+#itemname { color: #fff; text-shadow: var(--u) var(--u) 0 #3a3a3a; }
+#nowplaying {
+    color: #ff5555;
+    text-shadow: var(--u) var(--u) 0 #3a1a1a;
+    animation: rainbow 2s linear infinite;
+}
+@keyframes rainbow { to { filter: hue-rotate(360deg); } }
 
-#hearts { display: flex; height: calc(8 * var(--u)); }
-#hearts img {
-    width: calc(9 * var(--u));
-    height: calc(8 * var(--u));
-    margin-right: calc(-1 * var(--u));
-    image-rendering: pixelated;
-    animation: heartbeat 4s steps(1) infinite;
+.stats {
+    display: flex;
+    justify-content: space-between;
+    height: calc(9 * var(--u));
 }
-#hearts img:nth-child(n) { animation-delay: calc(var(--i, 0) * 60ms); }
-@keyframes heartbeat {
+#hearts, #food { display: flex; align-items: flex-end; }
+#food { flex-direction: row-reverse; }
+#hearts img, #food img {
+    width: calc(9 * var(--u));
+    image-rendering: pixelated;
+    margin-right: calc(-1 * var(--u));
+    animation: wave 4s steps(1) infinite;
+    animation-delay: calc(var(--i, 0) * 60ms);
+}
+#food img { width: calc(9 * var(--u)); height: calc(9 * var(--u)); margin: 0 0 0 calc(-1 * var(--u)); animation: none; }
+#hearts img { height: calc(8 * var(--u)); }
+@keyframes wave {
     0%, 92%, 100% { transform: none; }
     94%           { transform: translateY(calc(-2 * var(--u))); }
 }
@@ -189,7 +258,7 @@ html, body {
     bottom: calc(3 * var(--u));
     transform: translateX(-50%);
     color: #80ff20;
-    font-size: calc(7 * var(--u));
+    font-size: calc(6 * var(--u));
     line-height: 1;
     text-shadow:
         var(--u) 0 #000, calc(-1 * var(--u)) 0 #000,
@@ -212,7 +281,6 @@ html, body {
     border: 0;
     border-right: var(--u) solid #555;
     background: none;
-    cursor: var(--pointer);
 }
 .slot:last-child { border-right: 0; }
 .slot img {
@@ -221,6 +289,7 @@ html, body {
     image-rendering: pixelated;
     pointer-events: none;
 }
+.slot:hover { background: rgba(255, 255, 255, .12); }
 .slot.sel::after {
     content: "";
     position: absolute;
@@ -231,34 +300,42 @@ html, body {
     z-index: 1;
 }
 
-/* held item, bottom-right like first person */
-#hand {
+/* ---------- chat ---------- */
+#chat {
     position: fixed;
-    right: 9vw;
-    bottom: -1vh;
-    width: min(38vh, 34vw);
-    aspect-ratio: 1;
-    z-index: 3;
+    left: 8px;
+    bottom: calc(60 * var(--u) + 16px);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: min(520px, calc(100vw - 16px));
     pointer-events: none;
-    transform-origin: 100% 100%;
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    line-height: 1;
+}
+.chatline {
+    padding: 2px 6px;
+    background: rgba(0, 0, 0, .45);
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, .7);
+    transition: opacity 1s ease;
+}
+.chatline.fade { opacity: 0; }
+
+/* teleport flash */
+#flash {
+    position: fixed;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(190, 90, 255, .55), rgba(40, 0, 70, .9));
     opacity: 0;
-    transition: opacity .8s ease .3s;
-    filter: drop-shadow(0 0 12px rgba(0, 0, 0, .45));
 }
-#hand.on { opacity: 1; }
-#hand.empty #held { visibility: hidden; }
-#held {
-    width: 100%;
-    height: 100%;
-    image-rendering: pixelated;
-    transform: scaleX(-1) rotate(-12deg);   /* tip points up-left, toward the centre */
-}
+#flash.go { animation: tp .7s ease-out; }
+@keyframes tp { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
 
-@media (max-width: 600px) {
-    #hand { width: 40vw; bottom: calc(40px + 2vh); right: 2vw; }
-}
-
-/* 3D first-person hand (falls back to #hand if WebGL/three.js is unavailable) */
+/* ---------- held item ---------- */
 #hand3d {
     position: fixed;
     inset: 0;
@@ -270,3 +347,36 @@ html, body {
     transition: opacity .8s ease .3s;
 }
 #hand3d.on { opacity: 1; }
+
+/* 2D fallback if WebGL / three.js isn't available */
+#hand {
+    position: fixed;
+    right: 9vw;
+    bottom: -1vh;
+    width: min(38vh, 34vw);
+    aspect-ratio: 1;
+    z-index: 3;
+    pointer-events: none;
+    transform-origin: 100% 100%;
+    opacity: 0;
+    transition: opacity .8s ease .3s;
+}
+#hand.on { opacity: 1; }
+#hand.empty #held { visibility: hidden; }
+#held {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    transform: scaleX(-1) rotate(-12deg);
+}
+
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
+@media (max-width: 600px) {
+    #chat { font-size: 16px; }
+    .mcbtn { height: 36px; line-height: 30px; font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #vidarea, #intro, #main, #splash, #nowplaying, #hearts img { transition: none; animation: none; }
+}
