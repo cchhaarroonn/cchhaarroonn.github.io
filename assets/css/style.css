@@ -510,3 +510,70 @@ body.playing { cursor: none; }
 @media (pointer: coarse) {
     body.playing #chat { top: 70px; bottom: auto; }
 }
+
+/* ================= multiplayer UI ================= */
+#mpnote {
+    margin: -6px 0 0;
+    max-width: min(400px, 88vw);
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    line-height: 1.2;
+    text-align: center;
+    color: #a8a8a8;
+    text-shadow: 1px 1px 0 #111;
+}
+#mpnote[hidden] { display: none; }
+
+#chatinput {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: calc(60 * var(--u) + 2px);
+    z-index: 8;
+    height: 30px;
+    padding: 0 8px;
+    border: 0;
+    outline: none;
+    background: rgba(0, 0, 0, .6);
+    color: #fff;
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    caret-color: #fff;
+}
+#chatinput[hidden] { display: none; }
+body.chatting .chatline { opacity: 1 !important; }
+
+#tablist {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 8;
+    min-width: 260px;
+    padding: 8px 14px;
+    background: rgba(0, 0, 0, .55);
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    text-align: center;
+    color: #fff;
+}
+#tablist[hidden] { display: none; }
+#tablist b { display: block; margin-bottom: 4px; font-weight: normal; color: #ffff55; }
+
+#prompt {
+    position: fixed;
+    left: 50%;
+    top: 60%;
+    transform: translateX(-50%);
+    z-index: 5;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, .5);
+    font-size: 11px;
+    color: #fff;
+    text-shadow: 2px 2px 0 #333;
+    pointer-events: none;
+}
+#prompt[hidden] { display: none; }
+
+#t-chat { top: 14px; right: 66px; width: 54px; height: 44px; }
+.mcbtn[hidden] { display: none; }
