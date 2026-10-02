@@ -380,3 +380,133 @@ button, a { cursor: var(--cursor, pointer); font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
     #vidarea, #intro, #main, #splash, #nowplaying, #hearts img { transition: none; animation: none; }
 }
+
+/* ================= 3D world ================= */
+#world {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    display: block;
+}
+#world[hidden] { display: none; }
+
+/* in world mode the video only feeds the walls */
+body.world #vidarea { opacity: 0 !important; }
+body.world #vignette { display: none; }
+body.world #main { z-index: 7; padding-bottom: 1rem; }
+body.world #main.paused { background: rgba(0, 0, 0, .55); }
+
+#pausetitle {
+    display: none;
+    margin: 0;
+    font-size: clamp(14px, 2.4vw, 20px);
+    font-weight: normal;
+    text-shadow: 2px 2px 0 #3f3f3f;
+}
+#main.paused #title { display: none; }
+#main.paused #pausetitle { display: block; }
+
+#controls {
+    display: none;
+    margin: 0;
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    line-height: 1.3;
+    text-align: center;
+    color: #cfcfcf;
+    text-shadow: 2px 2px 0 #222;
+}
+body.world #controls { display: block; }
+@media (pointer: coarse) { #controls { display: none !important; } }
+
+#crosshair {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    width: 19px;
+    height: 19px;
+    margin: -9px 0 0 -9px;
+    z-index: 4;
+    pointer-events: none;
+    background: var(--crosshair) center / contain no-repeat;
+    image-rendering: pixelated;
+    display: none;
+}
+body.playing #crosshair { display: block; }
+body.playing { cursor: none; }
+
+/* death screen */
+#death {
+    position: fixed;
+    inset: 0;
+    z-index: 9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    background: rgba(120, 0, 0, .55);
+    text-align: center;
+}
+#death[hidden] { display: none; }
+#death h2 { margin: 0; font-size: clamp(22px, 5vw, 40px); font-weight: normal; text-shadow: 3px 3px 0 #3f0000; }
+#death p { margin: 0; font-size: 11px; color: #ddd; }
+#death .mcbtn { width: min(400px, 80vw); }
+
+/* hurt + low health */
+#hud.hurt #hearts { animation: hurt .35s steps(2) 2; }
+@keyframes hurt { 50% { filter: brightness(2.2); } }
+#hearts.low img { animation: shake .3s steps(2) infinite; }
+@keyframes shake { 50% { transform: translateY(calc(-1 * var(--u))); } }
+
+/* touch controls */
+#touch {
+    position: fixed;
+    inset: 0;
+    z-index: 3;
+    touch-action: none;
+    user-select: none;
+}
+#touch[hidden] { display: none; }
+#stick {
+    position: absolute;
+    left: 24px;
+    bottom: calc(60 * var(--u) + 40px);
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .12);
+    border: 2px solid rgba(255, 255, 255, .35);
+}
+#stick i {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 46px;
+    height: 46px;
+    margin: -23px 0 0 -23px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .45);
+}
+.tbtn {
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    border: 2px solid #000;
+    background: rgba(111, 111, 111, .75);
+    box-shadow: inset 2px 2px 0 #a9a9a9, inset -2px -3px 0 #4c4c4c;
+    color: #fff;
+    font-size: 10px;
+    text-shadow: 1px 1px 0 #333;
+}
+#t-pause { top: 14px; right: 14px; width: 44px; height: 44px; }
+#t-jump { right: 24px; bottom: calc(60 * var(--u) + 40px); }
+#t-hit  { right: 100px; bottom: calc(60 * var(--u) + 80px); }
+#t-use  { right: 24px; bottom: calc(60 * var(--u) + 116px); }
+
+/* on phones keep chat out of the way of the joystick */
+@media (pointer: coarse) {
+    body.playing #chat { top: 70px; bottom: auto; }
+}
