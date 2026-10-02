@@ -8,7 +8,7 @@
     const FOOD = 10;
 
     const B = window.Blocks ? Blocks.ids : {};
-    const SLOTS = ["sword", "disc", "pearl", "grass", "dirt", "stone", "planks", "log", "leaves"];
+    const SLOTS = ["sword", "disc", "pearl", "grass", "stone", "planks", "log", "leaves", "crystal"];
 
     /* ================= pixel art helpers ================= */
     const grid = (w, h) => Array.from({ length: h }, () => Array(w).fill("."));
@@ -185,7 +185,7 @@
             ITEMS[id] = { name: info.name, kind: "block", block, faces: info.faces };
         };
         add("grass", B.GRASS); add("dirt", B.DIRT); add("stone", B.STONE);
-        add("planks", B.PLANKS); add("log", B.LOG); add("leaves", B.LEAVES);
+        add("planks", B.PLANKS); add("log", B.LOG); add("leaves", B.LEAVES); add("crystal", B.CRYSTAL);
     }
     Object.values(ITEMS).forEach((it) => {
         if (it.kind === "sprite") it.icon = gridCanvas(it.grid, it.pal).toDataURL();
@@ -507,7 +507,47 @@
         if (swingStart < 0 || performance.now() - swingStart > 150) swingStart = performance.now();
     }
 
-    const canSelect = () => !worldMode || (window.World && World.playing());
+    const canSelect = () => !worldMode || (window.World && World.playing() && !World.typing());
+
+    /* ================= chat box (T) + player list (Tab) ================= */
+    const chatInput = $("chatinput"), tabList = $("tablist");
+    let chatOpen = false;
+
+    function openChat(prefix = "") {
+        if (!window.World || !World.playing() || chatOpen) return;
+        chatOpen = true;
+        World.setTyping(true);
+        document.body.classList.add("chatting");
+        chatInput.hidden = false;
+        chatInput.value = prefix;
+        chatInput.focus();
+    }
+    function closeChat() {
+        if (!chatOpen) return;
+        chatOpen = false;
+        chatInput.blur();
+        chatInput.hidden = true;
+        document.body.classList.remove("chatting");
+        if (window.World) World.setTyping(false);
+    }
+    chatInput.addEventListener("keydown", (e) => {
+        e.stopPropagation();
+        if (e.key === "Enter") {
+            const text = chatInput.value;
+            closeChat();
+            if (window.World) World.chat(text);
+        } else if (e.key === "Escape") closeChat();
+    });
+
+    function showTab(on) {
+        if (!window.World) return;
+        tabList.hidden = !on;
+        if (on) {
+            const list = World.players();
+            tabList.innerHTML = `<b>Players online: ${list.length}${World.multiplayer() ? "" : " (singleplayer)"}</b>` +
+                list.map((n) => `<div>${n.replace(/[<>&]/g, "")}</div>`).join("");
+        }
+    }
 
     // world = true: the 3D world handles clicks; false: old title-screen mode
     function start(where, world = false) {
@@ -540,7 +580,12 @@
         document.addEventListener("wheel", (e) => { if (canSelect()) select(selected + Math.sign(e.deltaY)); }, { passive: true });
         document.addEventListener("keydown", (e) => {
             if (canSelect() && e.key >= "1" && e.key <= "9") select(+e.key - 1);
+            if (!world || !canSelect()) return;
+            if (e.code === "KeyT" || e.code === "Enter") { e.preventDefault(); openChat(); }
+            else if (e.code === "Slash") { e.preventDefault(); openChat("/"); }
+            else if (e.code === "Tab") { e.preventDefault(); showTab(true); }
         });
+        document.addEventListener("keyup", (e) => { if (e.code === "Tab") showTab(false); });
 
         requestAnimationFrame(frame);
     }
@@ -555,6 +600,8 @@
         heal,
         addXP,
         useItem: use,
+        openChat,
+        closeChat,
         selectedId: () => SLOTS[selected],
         blockOf: (id) => (id && ITEMS[id] && ITEMS[id].kind === "block" ? ITEMS[id].block : 0),
         _pose: POSE,
