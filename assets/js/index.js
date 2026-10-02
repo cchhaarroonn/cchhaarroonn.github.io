@@ -32,6 +32,8 @@ const main = $("main");
 const splash = $("splash");
 const musicBtn = $("btn-music");
 const playBtn = $("btn-play");
+const singleBtn = $("btn-single");
+const multiBtn = $("btn-multi");
 
 let entered = false;
 let where = "";
@@ -195,16 +197,18 @@ function menu(state) {
     const show = state === "title" || state === "paused";
     main.hidden = !show;
     main.classList.toggle("paused", state === "paused");
-    playBtn.textContent = state === "paused" ? "Back to Game" : "Play";
+    playBtn.hidden = state !== "paused";
+    singleBtn.hidden = multiBtn.hidden = state !== "title";
+    $("mpnote").hidden = state !== "title";
     if (state === "playing" && !hudStarted) {
         hudStarted = true;
         if (window.HUD) HUD.start(where, true);
         if (window.World && World.isTouch) say("Left stick moves, drag to look, II opens the menu", "#aaaaaa");
-        else say("WASD move, Shift sprint, Ctrl crouch, LMB break/attack, RMB place/use, Esc menu", "#aaaaaa");
+        else say("WASD move, Shift sprint, Ctrl crouch, LMB break/attack, RMB place/use, T chat, / commands, Esc menu", "#aaaaaa");
     }
 }
 
-window.Site = { teleport, cycleMusic, musicOn, copyDiscord, menu };
+window.Site = { teleport, cycleMusic, musicOn, copyDiscord, menu, musicElement: () => music };
 
 /* ---------------- intro (loading screen) ---------------- */
 
@@ -268,7 +272,6 @@ function enter() {
     // the 3D world if the browser can do WebGL, otherwise the flat title screen
     if (window.World && World.init()) {
         document.body.classList.add("world");
-        playBtn.hidden = false;
     } else {
         main.hidden = false;
         if (window.HUD) HUD.start(where);
@@ -283,6 +286,8 @@ $("discord").addEventListener("click", copyDiscord);
 musicBtn.addEventListener("click", cycleMusic);
 $("btn-tp").addEventListener("click", teleport);
 playBtn.addEventListener("click", () => window.World && World.play());
+singleBtn.addEventListener("click", () => window.World && World.play("single"));
+multiBtn.addEventListener("click", () => window.World && World.play("multi"));
 
 intro.addEventListener("click", enter);
 document.addEventListener("keydown", (e) => {
