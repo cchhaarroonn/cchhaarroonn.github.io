@@ -126,3 +126,147 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
     #vidarea, #intro, #main, #toast { transition: none; animation: none; }
 }
+
+/* ================= minecraft-style HUD ================= */
+#hud {
+    --u: min(3px, calc((100vw - 16px) / 182));   /* one "texture pixel" */
+    position: fixed;
+    left: 50%;
+    bottom: calc(2 * var(--u));
+    width: calc(182 * var(--u));
+    transform: translateX(-50%);
+    z-index: 4;
+    font-family: 'Press Start 2P', monospace;
+    image-rendering: pixelated;
+    opacity: 0;
+    transition: opacity .8s ease .3s;
+    user-select: none;
+}
+#hud.on { opacity: 1; }
+#hud[hidden], #hand[hidden], #hand3d[hidden] { display: none; }
+
+#itemname {
+    text-align: center;
+    color: #fff;
+    font-size: calc(6 * var(--u));
+    text-shadow: var(--u) var(--u) 0 #3a3a3a;
+    min-height: calc(8 * var(--u));
+    margin-bottom: calc(6 * var(--u));
+    opacity: 0;
+    transition: opacity .4s ease;
+}
+#itemname.show { opacity: 1; transition: none; }
+
+#hearts { display: flex; height: calc(8 * var(--u)); }
+#hearts img {
+    width: calc(9 * var(--u));
+    height: calc(8 * var(--u));
+    margin-right: calc(-1 * var(--u));
+    image-rendering: pixelated;
+    animation: heartbeat 4s steps(1) infinite;
+}
+#hearts img:nth-child(n) { animation-delay: calc(var(--i, 0) * 60ms); }
+@keyframes heartbeat {
+    0%, 92%, 100% { transform: none; }
+    94%           { transform: translateY(calc(-2 * var(--u))); }
+}
+
+#xp {
+    position: relative;
+    height: calc(5 * var(--u));
+    margin: calc(1 * var(--u)) 0 calc(2 * var(--u));
+    background: #2a2a2a;
+    border: var(--u) solid #000;
+}
+#xpfill {
+    display: block;
+    height: 100%;
+    background: linear-gradient(#c6ff6a, #7ed321 60%, #4f9a12);
+}
+#level {
+    position: absolute;
+    left: 50%;
+    bottom: calc(3 * var(--u));
+    transform: translateX(-50%);
+    color: #80ff20;
+    font-size: calc(7 * var(--u));
+    line-height: 1;
+    text-shadow:
+        var(--u) 0 #000, calc(-1 * var(--u)) 0 #000,
+        0 var(--u) #000, 0 calc(-1 * var(--u)) #000;
+}
+
+#hotbar {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    height: calc(22 * var(--u));
+    background: rgba(25, 25, 25, .6);
+    border: var(--u) solid #000;
+    box-shadow: inset 0 0 0 var(--u) #7a7a7a;
+}
+.slot {
+    position: relative;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-right: var(--u) solid #555;
+    background: none;
+    cursor: var(--pointer);
+}
+.slot:last-child { border-right: 0; }
+.slot img {
+    width: calc(16 * var(--u));
+    height: calc(16 * var(--u));
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+.slot.sel::after {
+    content: "";
+    position: absolute;
+    inset: calc(-2 * var(--u));
+    border: calc(2 * var(--u)) solid #f4f4f4;
+    outline: var(--u) solid #000;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* held item, bottom-right like first person */
+#hand {
+    position: fixed;
+    right: 9vw;
+    bottom: -1vh;
+    width: min(38vh, 34vw);
+    aspect-ratio: 1;
+    z-index: 3;
+    pointer-events: none;
+    transform-origin: 100% 100%;
+    opacity: 0;
+    transition: opacity .8s ease .3s;
+    filter: drop-shadow(0 0 12px rgba(0, 0, 0, .45));
+}
+#hand.on { opacity: 1; }
+#hand.empty #held { visibility: hidden; }
+#held {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    transform: scaleX(-1) rotate(-12deg);   /* tip points up-left, toward the centre */
+}
+
+@media (max-width: 600px) {
+    #hand { width: 40vw; bottom: calc(40px + 2vh); right: 2vw; }
+}
+
+/* 3D first-person hand (falls back to #hand if WebGL/three.js is unavailable) */
+#hand3d {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .8s ease .3s;
+}
+#hand3d.on { opacity: 1; }
