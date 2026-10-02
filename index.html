@@ -33,7 +33,9 @@
         </div>
         <h2 id="pausetitle">Game Menu</h2>
         <nav class="menu">
-            <button class="mcbtn" type="button" id="btn-play" hidden>Play</button>
+            <button class="mcbtn" type="button" id="btn-single" hidden>Singleplayer</button>
+            <button class="mcbtn" type="button" id="btn-multi" hidden>Multiplayer</button>
+            <button class="mcbtn" type="button" id="btn-play" hidden>Back to Game</button>
             <a class="mcbtn" href="https://steamcommunity.com/id/charongod/" target="_blank" rel="noopener">Steam</a>
             <button class="mcbtn" type="button" id="discord">Discord</button>
             <a class="mcbtn" href="https://github.com/cchhaarroonn" target="_blank" rel="noopener">GitHub</a>
@@ -42,7 +44,8 @@
                 <button class="mcbtn" type="button" id="btn-tp">Next Video</button>
             </div>
         </nav>
-        <p id="controls" class="desk">WASD move &middot; Space jump &middot; Shift sprint &middot; Ctrl / C crouch<br>Left click break / attack &middot; Right click place / use &middot; 1-9 items &middot; Esc menu</p>
+        <p id="mpnote" hidden>Multiplayer is live &amp; peer-to-peer: you'll see other visitors, and they can see your IP address.</p>
+        <p id="controls" class="desk">WASD move &middot; Space jump (double-tap: fly) &middot; Shift sprint &middot; Ctrl / C crouch<br>Left click break / attack &middot; Right click place / use &middot; E portals &middot; 1-9 items<br>T chat &middot; / commands &middot; Tab players &middot; F2 screenshot &middot; Esc menu</p>
     </main>
 
     <div id="death" hidden>
@@ -56,6 +59,9 @@
     <div id="hand" hidden><img id="held" alt=""></div>
     <div id="crosshair"></div>
     <div id="chat"></div>
+    <input id="chatinput" type="text" maxlength="200" autocomplete="off" spellcheck="false" hidden>
+    <div id="tablist" hidden></div>
+    <div id="prompt" hidden></div>
     <div id="flash"></div>
     <div id="hud" hidden>
         <div id="nowplaying"></div>
@@ -69,6 +75,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="assets/js/net.js"></script>
     <script src="assets/js/world.js"></script>
     <script src="assets/js/hud.js"></script>
     <script src="assets/js/index.js"></script>
