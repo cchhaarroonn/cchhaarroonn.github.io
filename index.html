@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>charon.gay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0a0a0c; --ink: #f3efff; --glow: #9d6ad9; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: system-ui, sans-serif; }
+  #scroll { height: 700vh; position: relative; }
+  canvas { position: sticky; top: 0; display: block; width: 100%; height: 100vh; }
+  .hint { position: fixed; left: 50%; bottom: 6vh; transform: translateX(-50%); font-size: .95rem;
+    opacity: .7; pointer-events: none; transition: opacity .4s; }
+  .skip { position: fixed; top: 16px; right: 16px; z-index: 3; color: var(--ink); font-size: .9rem;
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); border-radius: 999px;
+    padding: 8px 14px; cursor: pointer; }
+  .skip:hover, .skip:focus-visible { background: rgba(255,255,255,.16); outline: none; }
+  .end { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 2.2rem; opacity: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 45%, rgba(40,26,64,.94), rgba(10,10,12,.97) 70%); }
+  .end.live { pointer-events: auto; }
+  h1 { margin: 0; font-family: Syne, system-ui, sans-serif; font-weight: 800; letter-spacing: -.045em;
+    font-size: clamp(3rem, 12vw, 8.5rem); text-shadow: 0 0 40px rgba(157,106,217,.55); }
+  .links { display: flex; gap: 18px; }
+  .links a { width: 60px; height: 60px; display: grid; place-items: center; border-radius: 18px;
+    color: var(--ink); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.16);
+    transition: transform .2s, box-shadow .2s, background .2s; }
+  .links a:hover, .links a:focus-visible { transform: translateY(-4px); background: rgba(157,106,217,.28);
+    box-shadow: 0 8px 30px rgba(157,106,217,.45); outline: none; }
+  .links svg { width: 28px; height: 28px; fill: currentColor; }
+  @media (prefers-reduced-motion: reduce) { .links a { transition: none; } }
+</style>
+</head>
+<body>
+<button class="skip" id="skip">Skip intro</button>
+<div id="scroll"><canvas id="c"></canvas></div>
+<div class="hint" id="hint">Scroll</div>
+
+<div class="end" id="end">
+  <h1>charon.gay</h1>
+  <nav class="links">
+    <a href="https://github.com/cchhaarroonn" aria-label="GitHub" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+    </a>
+    <!-- TODO: put your Steam profile URL here -->
+    <a href="https://steamcommunity.com/" aria-label="Steam" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 1a11 11 0 1 0 10.9 12.4L17 11.1a4 4 0 1 0-3.6-5.2 4 4 0 0 0 .1 2.4l-3.6 1.5a3 3 0 1 0 .9 2.3l3.3-1.4a4 4 0 0 0 6.2-1.2l.8.3A9 9 0 1 1 12 3zm5.5 4.3a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4zM8 13.4a1.8 1.8 0 1 1-1.2 3.3l1 .4a1.4 1.4 0 1 0 .2-2.7z"/></svg>
+    </a>
+    <!-- TODO: put your Telegram username here, e.g. https://t.me/yourname -->
+    <a href="https://t.me/" aria-label="Telegram" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+    </a>
+  </nav>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// Optional extras: if they fail to load, the scene still works without them.
+let RBG = null, composer = null;
+try { RBG = (await import('three/addons/geometries/RoundedBoxGeometry.js')).RoundedBoxGeometry; } catch (e) { console.warn(e); }
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a0c);
+scene.fog = new THREE.Fog(0x0a0a0c, 9, 24);
+const camera = new THREE.PerspectiveCamera(35, 1, 0.05, 60);
+
+try {
+  const m = f => import('three/addons/postprocessing/' + f);
+  const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }] =
+    await Promise.all([m('EffectComposer.js'), m('RenderPass.js'), m('UnrealBloomPass.js'), m('OutputPass.js')]);
+  composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(2, 2, { type: THREE.HalfFloatType, samples: 4 }));
+  composer.addPass(new RenderPass(scene, camera));
+  composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), .45, .6, .9));
+  composer.addPass(new OutputPass());
+} catch (e) { console.warn('bloom off', e); composer = null; }
+
+const S = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const L = (a, b, t) => a + (b - a) * t;
+const mat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: .75, metalness: .05, ...o });
+const glow = (c, i = 2.5) => mat(c, { emissive: c, emissiveIntensity: i });
+function box(w, h, d, m, x = 0, y = 0, z = 0, r = .012) {
+  const geo = RBG ? new RBG(w, h, d, 3, Math.min(r, w / 2.2, h / 2.2, d / 2.2)) : new THREE.BoxGeometry(w, h, d);
+  const o = new THREE.Mesh(geo, typeof m === 'number' ? mat(m) : m);
+  o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; return o;
+}
+function caps(r, len, m) { const o = new THREE.Mesh(new THREE.CapsuleGeometry(r, Math.max(.01, len - 2 * r), 4, 14), m); o.castShadow = true; return o; }
+
+// ---------- lights ----------
+scene.add(new THREE.HemisphereLight(0x8f84ff, 0x1a1428, .9));
+const key = new THREE.DirectionalLight(0xffe0bd, 1.5);
+key.position.set(-3, 5, 4); key.castShadow = true; key.shadow.mapSize.set(2048, 2048);
+Object.assign(key.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5 });
+scene.add(key);
+const wash = new THREE.PointLight(0xa56bff, 4, 7); wash.position.set(0, 1.9, -.3); scene.add(wash);
+const sl = new THREE.PointLight(0x9fd0ff, 4, 5); sl.position.set(0, 1.15, .5); scene.add(sl);
+
+// ---------- room ----------
+scene.add(box(30, .1, 30, 0x14111d, 0, -.05, 0, 0));
+scene.add(box(30, 8, .1, 0x1a1630, 0, 3.9, -.7, 0));
+const rug = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.7, .012, 64), mat(0x2a1f45, { roughness: 1 }));
+rug.position.set(0, .006, .9); rug.receiveShadow = true; scene.add(rug);
+scene.add(box(2.8, .04, .03, glow(0xb06bff), 0, 2.2, -.64));
+scene.add(box(2.6, .02, .02, glow(0x66ccff, 1.6), 0, 1.78, -.64));
+// desk
+scene.add(box(2.2, .05, .85, 0x2a2438, 0, .74, 0, .02), box(1.0, .006, .42, 0x0c0b12, 0, .768, .2, .003));
+[-1.02, 1.02].forEach(x => scene.add(box(.06, .72, .75, 0x2a2438, x, .36, 0)));
+scene.add(box(.46, .02, .15, 0x1e1b2b, 0, .782, .22, .008), box(.06, .026, .1, 0x1e1b2b, .38, .782, .22, .01));
+scene.add(box(.28, .55, .5, 0x181522, 1.45, .28, .1, .02), box(.015, .4, .015, glow(0x66ccff, 3), 1.31, .3, .36, .004));
+// chair
+const chair = new THREE.Group();
+chair.add(box(.52, .07, .5, 0x2b2540, 0, .43, 0, .03), box(.5, .58, .07, 0x2b2540, 0, .78, .27, .03),
+          box(.06, .4, .06, 0x111018, 0, .2, 0), box(.55, .04, .06, 0x111018, 0, .02, 0), box(.06, .04, .55, 0x111018, 0, .02, 0));
+chair.position.z = 1.0; scene.add(chair);
+
+// ---------- screens ----------
+function mkTex(w, h) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  return { c, g: c.getContext('2d'), t };
+}
+const A = mkTex(1920, 1080), B = mkTex(1280, 720), base = document.createElement('canvas');
+base.width = 1920; base.height = 1080;
+function monitor(x, ry, tex) {
+  const m = new THREE.Group(); m.position.set(x, 1.15, -.22); m.rotation.y = ry;
+  m.add(box(1.04, .6, .04, 0x0d0c14, 0, 0, 0, .012), box(.07, .1, .05, 0x0d0c14, 0, -.34, -.02), box(.3, .015, .18, 0x0d0c14, 0, -.38, -.02, .005));
+  const s = new THREE.Mesh(new THREE.PlaneGeometry(1, .5625), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+  s.position.z = .0205; m.add(s); scene.add(m);
+}
+monitor(-.56, .14, A.t); monitor(.56, -.14, B.t);
+
+const JOKE = "it works on my machine ¯\\_(ツ)_/¯";
+const PUR = '#d18bff', FG = '#e4e4e4', ACC = '#9d6ad9';
+const rr = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
+function icon(g, type, cx, cy, label) {
+  g.save(); g.translate(cx, cy);
+  if (type === 'folder') { g.fillStyle = '#7e57c2'; rr(g, -28, -20, 56, 42, 5); g.fill(); g.fillStyle = '#9575cd'; rr(g, -28, -26, 24, 12, 4); g.fill(); g.fillStyle = '#a58be0'; rr(g, -28, -14, 56, 34, 5); g.fill(); }
+  if (type === 'trash') { g.fillStyle = '#cfd8dc'; g.beginPath(); g.moveTo(-18, -12); g.lineTo(18, -12); g.lineTo(14, 24); g.lineTo(-14, 24); g.fill(); g.fillRect(-22, -20, 44, 6); g.fillRect(-6, -26, 12, 6); }
+  if (type === 'pc') { g.fillStyle = '#546e7a'; rr(g, -28, -22, 56, 38, 4); g.fill(); g.fillStyle = '#1c2a33'; g.fillRect(-24, -18, 48, 28); g.fillStyle = '#546e7a'; g.fillRect(-6, 16, 12, 6); g.fillRect(-16, 22, 32, 4); }
+  if (type === 'ij') { g.fillStyle = '#000'; rr(g, -26, -26, 52, 52, 6); g.fill(); const gr = g.createLinearGradient(-26, -26, 6, 6); gr.addColorStop(0, '#ff318c'); gr.addColorStop(1, '#fc801d'); g.fillStyle = gr; g.fillRect(-26, -26, 30, 30); g.fillStyle = '#000'; g.fillRect(-20, -20, 18, 18); g.fillStyle = '#fff'; g.font = 'bold 15px sans-serif'; g.fillText('IJ', -22, -6); g.fillRect(-21, 16, 22, 3); }
+  if (type === 'vsc') { g.fillStyle = '#2f9bd8'; g.beginPath(); g.arc(0, 0, 25, 0, 6.283); g.fill(); g.fillStyle = '#0d3a58'; g.font = 'bold 22px sans-serif'; g.textAlign = 'center'; g.fillText('</>', 0, 8); }
+  g.restore();
+  g.font = '15px sans-serif'; g.textAlign = 'center'; g.fillStyle = '#000'; g.fillText(label, cx + 1, cy + 49); g.fillStyle = '#fff'; g.fillText(label, cx, cy + 48);
+}
+const TX = 630, TY = 293, TW = 660, TH = 465;
+function drawBase() {
+  const g = base.getContext('2d');
+  g.fillStyle = '#0a0a0c'; g.fillRect(0, 0, 1920, 1080);
+  [['trash', 42, 'Trash'], ['folder', 137, "charon's Home"], ['pc', 235, 'Computer'], ['ij', 353, 'IntelliJ'],
+   ['vsc', 437, 'VSCodium'], ['folder', 517, 'Projects'], ['folder', 599, 'Apps']].forEach(([t, y, l]) => icon(g, t, 89, y + 6, l));
+  // terminal window
+  g.fillStyle = '#000'; g.fillRect(TX, TY, TW, TH); g.strokeStyle = '#3a3a3a'; g.lineWidth = 2; g.strokeRect(TX, TY, TW, TH);
+  g.fillStyle = '#2b2b2f'; g.fillRect(TX, TY, TW, 30);
+  g.fillStyle = '#ddd'; g.font = '14px sans-serif'; g.textAlign = 'center'; g.fillText('Terminal', TX + TW / 2, TY + 20);
+  g.fillStyle = '#8a8a90'; g.fillRect(TX + TW - 72, TY + 15, 10, 2); g.strokeStyle = '#8a8a90'; g.lineWidth = 1.5; g.strokeRect(TX + TW - 50, TY + 9, 10, 10);
+  g.fillStyle = '#9d4edd'; g.beginPath(); g.arc(TX + TW - 18, TY + 15, 8, 0, 6.283); g.fill();
+  g.fillStyle = '#1e1e22'; g.fillRect(TX, TY + 30, TW, 28);
+  g.fillStyle = '#ccc'; g.font = '13px sans-serif'; g.textAlign = 'left';
+  [['File', 8], ['Edit', 48], ['View', 90], ['Search', 135], ['Terminal', 195], ['Help', 262]].forEach(([t, x]) => g.fillText(t, TX + x, TY + 49));
+  g.fillStyle = '#3a3a40'; g.fillRect(TX + TW - 10, TY + 60, 6, TH - 66);
+  // panel
+  g.fillStyle = '#111114'; g.fillRect(0, 1050, 1920, 30);
+  g.fillStyle = '#5fb760'; g.beginPath(); g.arc(16, 1065, 9, 0, 6.283); g.fill();
+  [38, 62, 86, 110, 134].forEach((x, i) => { g.fillStyle = ['#8a8a90', '#6f6f78', '#7e57c2', '#8a8a90', '#e0b341'][i]; rr(g, x, 1056, 16, 18, 3); g.fill(); });
+  g.fillStyle = '#b9b9c4'; g.font = '13px sans-serif'; g.textAlign = 'left'; g.fillText(JOKE, 190, 1070);
+  [1690, 1714, 1738, 1762, 1786].forEach(x => { g.fillStyle = '#777'; g.fillRect(x, 1060, 12, 12); });
+}
+function drawSecond() {
+  const g = B.g; let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  g.fillStyle = '#0a0a0c'; g.fillRect(0, 0, 1280, 720);
+  g.fillStyle = '#16161a'; g.fillRect(150, 90, 980, 520); g.fillStyle = '#1b1b21'; g.fillRect(150, 90, 980, 30);
+  g.fillStyle = '#101014'; g.fillRect(150, 120, 54, 470); g.fillStyle = '#1e1e24'; g.fillRect(204, 120, 190, 470);
+  g.fillStyle = '#9d6ad9'; g.fillRect(150, 590, 980, 20);
+  g.fillStyle = '#ddd'; g.font = '13px sans-serif'; g.fillText('index.html', 420, 110); g.fillText('hr.bartol.kishin', 215, 140);
+  const cols = ['#c792ea', '#82aaff', '#c3e88d', '#f78c6c', '#ffcb6b', '#89ddff'];
+  for (let r = 0; r < 24; r++) {
+    let x = 420 + (rnd() < .5 ? 0 : 28) + (rnd() < .3 ? 28 : 0);
+    g.fillStyle = '#444'; g.font = '12px monospace'; g.fillText(String(r + 1), 395, 160 + r * 17);
+    for (let k = 0; k < 2 + Math.floor(rnd() * 4); k++) { const w = 30 + rnd() * 90; g.fillStyle = cols[Math.floor(rnd() * cols.length)]; g.fillRect(x, 150 + r * 17, w, 8); x += w + 10; }
+  }
+  for (let r = 0; r < 14; r++) { g.fillStyle = r % 3 ? '#6f6f78' : '#9575cd'; g.fillRect(228 + (r % 3) * 14, 156 + r * 22, 60 + (r * 37) % 80, 8); }
+  B.t.needsUpdate = true;
+}
+const LOGO = ["                               _.._", "                             .'    '.", "                            (____/`\\ \\", "                           (  |' ' )  )", "                           )   \\= _/  (", "                 __..---.(` .'    \\    )", "                `;-\"\"-. ( ( .      `; (", "                /       `-`'--'     ; )", "               /    /  .    ( .  ,| |(", "_.-`'---...__,'    /-,..___.-'--' | | )", "'-'``'-..        ,'  |   / .........'", "          ``;--\"`;   |   `-`", "             `'..__.'"];
+const INFO = [['', 'charon@admin-mint'], ['', '-------------------'], ['OS', 'Linux Mint 22.3 x86_64'], ['Host', 'B460MDS3H V2-CF'],
+  ['Kernel', '7.0.0-38-generic'], ['Uptime', '1 hour, 1 min'], ['Packages', '2242 (dpkg)'], ['Shell', 'bash 5.2.21'],
+  ['Resolution', '1920x1080, 1920x1080'], ['DE', 'MATE 1.26.1'], ['WM', 'Metacity (Marco)'],
+  ['CPU', '11th Gen Intel i5-11600 (12) @ 4.8GHz'], ['GPU', 'NVIDIA GeForce GT 1030'], ['Memory', '4174MiB / 15868MiB']];
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const p2 = n => String(n).padStart(2, '0');
+function drawMain(t, p) {
+  const g = A.g; g.drawImage(base, 0, 0);
+  const d = new Date(); g.fillStyle = '#ddd'; g.font = '13px sans-serif'; g.textAlign = 'left';
+  g.fillText(`${DAYS[d.getDay()]} ${MON[d.getMonth()]} ${d.getDate()}, ${p2(d.getHours())}:${p2(d.getMinutes())}`, 1812, 1070);
+  const tp = S(.62, .82, p), LH = 17, x0 = TX + 12, y0 = TY + 68;
+  g.save(); g.beginPath(); g.rect(TX + 2, TY + 60, TW - 14, TH - 62); g.clip();
+  g.font = '13px monospace'; g.textBaseline = 'top';
+  const cw = g.measureText('M').width, prompt = 'charon@admin-mint:~/Desktop$ ', pw = cw * prompt.length;
+  const typed = Math.floor(Math.min(1, tp / .3) * 8), rows = Math.floor(Math.max(0, (tp - .3) / .7) * 16);
+  g.fillStyle = PUR; g.fillText(prompt, x0, y0); g.fillStyle = FG; g.fillText('neofetch'.slice(0, typed), x0 + pw, y0);
+  for (let r = 0; r < Math.min(rows, 14); r++) {
+    const y = y0 + LH * (r + 1); g.fillStyle = '#e0e0e0'; if (LOGO[r]) g.fillText(LOGO[r], x0, y);
+    const inf = INFO[r]; if (!inf) continue; const ix = x0 + cw * 42;
+    if (inf[0]) { g.fillStyle = PUR; g.fillText(inf[0] + ':', ix, y); g.fillStyle = FG; g.fillText(inf[1], ix + cw * (inf[0].length + 2), y); }
+    else { g.fillStyle = r ? FG : PUR; g.fillText(inf[1], ix, y); }
+  }
+  const done = rows >= 15, cy = done ? y0 + LH * 15 : y0, cx = done ? x0 + pw : x0 + pw + cw * typed;
+  if (done) { g.fillStyle = PUR; g.fillText(prompt, x0, cy); }
+  if (Math.floor(t * 2) % 2 === 0 && (done || rows === 0)) { g.fillStyle = '#ddd'; g.fillRect(cx, cy, cw, 15); }
+  g.restore(); A.t.needsUpdate = true;
+}
+drawBase(); drawSecond();
+
+// ---------- character: tech fleece set ----------
+const FLC = mat(0x676a73, { roughness: 1 }), FLD = mat(0x34353b, { roughness: 1 }), SKIN = mat(0xe8b89a, { roughness: .6 });
+const SHOE = mat(0xf4f4f6, { roughness: .5 }), SOLE = mat(0x9a9aa4);
+const char = new THREE.Group(), hips = new THREE.Group(); char.add(hips); scene.add(char);
+hips.add(box(.42, .24, .26, FLD, 0, .03, 0, .08));                          // jogger waistband
+hips.add(box(.45, .56, .27, FLC, 0, .34, 0, .09));                          // fleece jacket
+hips.add(box(.012, .5, .012, mat(0xdadae2), 0, .34, .138, .004));           // zipper
+[-.045, .045].forEach(x => hips.add(box(.01, .13, .01, mat(0xffffff), x, .52, .14, .004))); // drawstrings
+[-.12, .12].forEach(x => hips.add(box(.1, .012, .012, FLD, x, .3, .139, .004)));          // pocket zips
+const hood = new THREE.Mesh(new THREE.SphereGeometry(.17, 24, 16), FLC); hood.scale.set(1.15, .7, .85); hood.position.set(0, .68, -.08); hood.castShadow = true; hips.add(hood);
+const head = new THREE.Mesh(new THREE.SphereGeometry(.15, 28, 20), SKIN); head.position.y = .86; head.castShadow = true; hips.add(head);
+const hair = new THREE.Mesh(new THREE.SphereGeometry(.158, 28, 20, 0, 6.283, 0, 1.7), mat(0x20142e)); hair.position.set(0, .875, -.012); hips.add(hair);
+[-.055, .055].forEach(x => { const e = new THREE.Mesh(new THREE.SphereGeometry(.017, 10, 8), mat(0x15101c)); e.position.set(x, .865, .138); hips.add(e); });
+const legs = [], arms = [];
+[-1, 1].forEach(s => {
+  const th = new THREE.Group(), sh = new THREE.Group();
+  const tm = caps(.092, .45, FLC); tm.position.y = -.225; th.add(tm);
+  const sm = caps(.068, .45, FLC); sm.position.y = -.225; sh.add(sm);
+  const cuff = new THREE.Mesh(new THREE.CylinderGeometry(.062, .062, .06, 14), FLD); cuff.position.y = -.4; sh.add(cuff);
+  sh.add(box(.15, .09, .29, SHOE, 0, -.465, .06, .04), box(.152, .03, .295, SOLE, 0, -.505, .06, .012));
+  th.position.set(s * .115, 0, 0); sh.position.y = -.45; th.add(sh); hips.add(th); legs.push({ th, sh, s });
+  const up = new THREE.Group(), fo = new THREE.Group();
+  const um = caps(.065, .3, FLC); um.position.y = -.15; up.add(um);
+  const fm = caps(.056, .3, FLC); fm.position.y = -.15; fo.add(fm);
+  const hand = new THREE.Mesh(new THREE.SphereGeometry(.05, 14, 10), SKIN); hand.position.y = -.33; fo.add(hand);
+  const ac = new THREE.Mesh(new THREE.CylinderGeometry(.052, .052, .04, 12), FLD); ac.position.y = -.28; fo.add(ac);
+  up.position.set(s * .285, .53, 0); fo.position.y = -.3; up.add(fo); hips.add(up); arms.push({ up, fo, s });
+});
+function pose(p) {
+  const turn = S(.35, .43, p), step = S(.43, .5, p), sit = S(.5, .6, p), walk = 1 - sit, ph = p * 85;
+  char.position.set(L(-3.2, 0, S(0, .35, p)), 0, 1.9 - .65 * step - .25 * sit);
+  char.rotation.y = L(Math.PI / 2, Math.PI, turn);
+  hips.position.y = .955 - .4 * sit + Math.abs(Math.cos(ph)) * .03 * walk;
+  legs.forEach(({ th, sh, s }) => { const a = Math.sin(ph + (s > 0 ? 0 : Math.PI));
+    th.rotation.x = a * .6 * walk - sit * 1.5708; sh.rotation.x = Math.max(0, -a) * .9 * walk + sit * 1.5708; });
+  arms.forEach(({ up, fo, s }) => { const a = Math.sin(ph + (s > 0 ? Math.PI : 0));
+    up.rotation.x = a * .6 * walk - sit * 1.0; fo.rotation.x = -sit * .75; });
+  head.rotation.x = hair.rotation.x = 0;
+}
+
+// ---------- camera path ----------
+const K = [
+  [0,   [-1.2, 1.6, 5.6],  [-2.6, 1, 1.8]],
+  [.4,  [2.6, 1.7, 4.3],   [-.2, 1, 1.6]],
+  [.6,  [1.6, 1.55, 2.7],  [0, 1.1, .7]],
+  [.8,  [-.5, 1.45, 1.35], [-.45, 1.15, -.1]],
+  [.92, [-.44, 1.15, .62], [-.56, 1.15, -.2]],
+  [1,   [-.5, 1.15, .36],  [-.56, 1.15, -.2]],
+];
+const look = new THREE.Vector3();
+function placeCamera(p) {
+  let i = 0; while (i < K.length - 2 && p > K[i + 1][0]) i++;
+  const a = K[i], b = K[i + 1], t = Math.min(1, Math.max(0, (p - a[0]) / (b[0] - a[0])));
+  camera.position.set(L(a[1][0], b[1][0], t), L(a[1][1], b[1][1], t), L(a[1][2], b[1][2], t));
+  look.set(L(a[2][0], b[2][0], t), L(a[2][1], b[2][1], t), L(a[2][2], b[2][2], t)); camera.lookAt(look);
+}
+
+// ---------- scroll + loop ----------
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  renderer.setSize(w, h, false); if (composer) composer.setSize(w, h);
+  camera.aspect = w / h; camera.fov = camera.aspect < 1 ? 55 : 35; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+const scroller = document.getElementById('scroll'), end = document.getElementById('end'), hint = document.getElementById('hint');
+let target = 0, cur = 0;
+const read = () => { target = Math.min(1, Math.max(0, scrollY / (scroller.offsetHeight - innerHeight))); };
+addEventListener('scroll', read); read();
+document.getElementById('skip').onclick = () => scrollTo({ top: scroller.offsetHeight, behavior: 'smooth' });
+
+renderer.setAnimationLoop(t => {
+  cur += (target - cur) * .07;
+  if (cur > .4) drawMain(t / 1000, cur);
+  pose(cur); placeCamera(cur);
+  const o = S(.9, .99, cur);
+  end.style.opacity = o; end.classList.toggle('live', o > .9);
+  hint.style.opacity = cur < .02 ? .7 : 0;
+  composer ? composer.render() : renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>
