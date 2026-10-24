@@ -38,7 +38,8 @@
     font-size: clamp(3.2rem, 11vw, 9rem);
     background: linear-gradient(100deg, #fff 20%, #cdb4ff 55%, #9d6ad9); -webkit-background-clip: text; background-clip: text; color: transparent;
     filter: drop-shadow(0 0 36px rgba(157,106,217,.4)); }
-  .sub { max-width: 34ch; margin: 1.6rem 0 2.2rem; font-size: clamp(1.05rem, 1.8vw, 1.45rem); line-height: 1.5; color: rgba(243,239,255,.78); }
+  .sub { max-width: 42ch; margin: 1.6rem 0 2.2rem; font-size: clamp(1.05rem, 1.8vw, 1.45rem); line-height: 1.5; color: rgba(243,239,255,.78); }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-self: flex-start; }
   .btn { align-self: flex-start; display: inline-flex; align-items: center; gap: .8rem; padding: 1rem 1.6rem; border-radius: 999px;
     color: #fff; text-decoration: none; font-weight: 600; font-size: 1.1rem; background: rgba(255,255,255,.07);
     border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(8px); transition: transform .25s, box-shadow .25s, background .25s; }
@@ -75,10 +76,13 @@
   </section>
   <section class="stage">
     <span class="ghost">kishin</span>
-    <p class="cmd" data-t="$ ./kishin --start"></p>
+    <p class="cmd" data-t="$ ./kishin --story"></p>
     <h2>Kishin.</h2>
-    <p class="sub">A SkyBlock core for Paper 1.21. Islands, teams, banks, levels and lootboxes, built from scratch in Java 21.</p>
-    <a class="btn" href="https://kishin.lol" target="_blank" rel="noopener">kishin.lol<svg><use href="#ar"/></svg></a>
+    <p class="sub">Minecraft servers, plugins and tools, each with its own story. A Skyblock realm of yokai pets and world bosses, plus KeyShin, licensing built in Go.</p>
+    <div class="row">
+      <a class="btn" href="https://kishin.lol" target="_blank" rel="noopener">kishin.lol<svg><use href="#ar"/></svg></a>
+      <a class="btn" href="https://www.kishin.lol/docs.html" target="_blank" rel="noopener">Read the docs<svg><use href="#ar"/></svg></a>
+    </div>
   </section>
   <section class="stage">
     <span class="ghost">hello</span>
@@ -288,7 +292,7 @@ const legs = [], arms = [];
   up.position.set(s * .285, .53, 0); fo.position.y = -.3; up.add(fo); hips.add(up); arms.push({ up, fo, s });
 });
 function pose(p) {
-  const turn = S(.35, .43, p), step = S(.43, .5, p), sit = S(.5, .6, p), walk = 1 - sit, ph = p * 85;
+  const turn = S(.35, .43, p), step = S(.43, .5, p), sit = S(.5, .6, p), walk = 1 - sit, ph = p * 40;
   char.position.set(L(-3.2, 0, S(0, .35, p)), 0, 1.9 - .65 * step - .25 * sit);
   char.rotation.y = L(Math.PI / 2, Math.PI, turn);
   hips.position.y = .955 - .4 * sit + Math.abs(Math.cos(ph)) * .03 * walk;
@@ -324,11 +328,12 @@ function resize() {
 }
 addEventListener('resize', resize); resize();
 const scroller = document.getElementById('scroll'), end = document.getElementById('end'), hint = document.getElementById('hint');
-let target = 0, cur = 0;
+let target = 0, cur = 0, vel = 0, last = 0;
 const read = () => { target = Math.min(1, Math.max(0, scrollY / (scroller.offsetHeight - innerHeight))); };
 addEventListener('scroll', read); read();
 document.getElementById('skip').onclick = () => scrollTo({ top: (scroller.offsetHeight - innerHeight) * .72, behavior: 'smooth' });
 
+const MAX_INTRO_SPEED = .085, MAX_TEXT_SPEED = .12; // progress per second; lower = calmer
 const stages = [...document.querySelectorAll('.stage')], dots = [...document.querySelectorAll('.dots i')], load = document.getElementById('load');
 stages.forEach(st => { st._cmd = st.querySelector('.cmd'); st._txt = st._cmd.dataset.t; st._t0 = null; });
 addEventListener('pointermove', e => { end.style.setProperty('--mx', e.clientX + 'px'); end.style.setProperty('--my', e.clientY + 'px'); });
@@ -349,7 +354,13 @@ function updateStages(q, now) {
 }
 let first = true;
 renderer.setAnimationLoop(t => {
-  cur += (target - cur) * .07;
+  // Speed-limited, eased scrubbing: fast scrolling can't make the character run.
+  const dt = Math.min(.05, Math.max(0, (t - last) / 1000)); last = t;
+  const MAXV = cur < .7 ? MAX_INTRO_SPEED : MAX_TEXT_SPEED;
+  const vWant = Math.max(-MAXV, Math.min(MAXV, (target - cur) * 2));
+  vel += (vWant - vel) * Math.min(1, dt * 8);
+  cur = Math.min(1, Math.max(0, cur + vel * dt));
+  if (Math.abs(target - cur) < 1e-4 && Math.abs(vel) < 1e-3) { cur = target; vel = 0; }
   const sp = Math.min(1, cur / .7), q = Math.max(0, (cur - .7) / .3);
   if (sp > .4) drawMain(t / 1000, sp);
   pose(sp); placeCamera(sp);
