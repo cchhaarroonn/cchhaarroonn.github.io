@@ -4,13 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>charon.gay</title>
+<meta name="description" content="charon: GitHub, the Kishin SkyBlock plugin and how to reach me.">
+<meta name="theme-color" content="#0a0a0c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&display=swap" rel="stylesheet">
 <style>
   :root { --bg: #0a0a0c; --ink: #f3efff; --glow: #9d6ad9; }
   html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: system-ui, sans-serif; }
-  #scroll { height: 700vh; position: relative; }
+  #scroll { height: 1000vh; position: relative; }
   canvas { position: sticky; top: 0; display: block; width: 100%; height: 100vh; }
   .hint { position: fixed; left: 50%; bottom: 6vh; transform: translateX(-50%); font-size: .95rem;
     opacity: .7; pointer-events: none; transition: opacity .4s; }
@@ -18,20 +20,38 @@
     background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); border-radius: 999px;
     padding: 8px 14px; cursor: pointer; }
   .skip:hover, .skip:focus-visible { background: rgba(255,255,255,.16); outline: none; }
-  .end { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 2.2rem; opacity: 0; pointer-events: none;
-    background: radial-gradient(ellipse at 50% 45%, rgba(40,26,64,.94), rgba(10,10,12,.97) 70%); }
+  #load { position: fixed; inset: 0; z-index: 9; background: #0a0a0c; display: grid; place-items: center;
+    font: 800 1.1rem Syne, system-ui, sans-serif; letter-spacing: .3em; color: #9d6ad9; transition: opacity .7s; }
+  #load span { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  .end { position: fixed; inset: 0; opacity: 0; pointer-events: none; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 45%, rgba(38,24,62,.93), rgba(10,10,12,.97) 72%); }
   .end.live { pointer-events: auto; }
-  h1 { margin: 0; font-family: Syne, system-ui, sans-serif; font-weight: 800; letter-spacing: -.045em;
-    font-size: clamp(3rem, 12vw, 8.5rem); text-shadow: 0 0 40px rgba(157,106,217,.55); }
-  .links { display: flex; gap: 18px; }
-  .links a { width: 60px; height: 60px; display: grid; place-items: center; border-radius: 18px;
-    color: var(--ink); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.16);
-    transition: transform .2s, box-shadow .2s, background .2s; }
-  .links a:hover, .links a:focus-visible { transform: translateY(-4px); background: rgba(157,106,217,.28);
-    box-shadow: 0 8px 30px rgba(157,106,217,.45); outline: none; }
-  .links svg { width: 28px; height: 28px; fill: currentColor; }
-  @media (prefers-reduced-motion: reduce) { .links a { transition: none; } }
+  .end::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%), rgba(157,106,217,.22), transparent 60%); }
+  .end::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px); }
+  .stage { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center;
+    padding: 0 8vw; max-width: 1200px; margin: 0 auto; box-sizing: border-box; opacity: 0; will-change: transform, opacity, filter; }
+  .cmd { font: 500 clamp(.95rem, 1.6vw, 1.25rem) ui-monospace, "DejaVu Sans Mono", monospace; color: #d18bff; margin: 0 0 1.4rem; min-height: 1.6em; }
+  h2 { margin: 0; font-family: Syne, system-ui, sans-serif; font-weight: 800; letter-spacing: -.05em; line-height: .95;
+    font-size: clamp(3.2rem, 11vw, 9rem);
+    background: linear-gradient(100deg, #fff 20%, #cdb4ff 55%, #9d6ad9); -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 36px rgba(157,106,217,.4)); }
+  .sub { max-width: 34ch; margin: 1.6rem 0 2.2rem; font-size: clamp(1.05rem, 1.8vw, 1.45rem); line-height: 1.5; color: rgba(243,239,255,.78); }
+  .btn { align-self: flex-start; display: inline-flex; align-items: center; gap: .8rem; padding: 1rem 1.6rem; border-radius: 999px;
+    color: #fff; text-decoration: none; font-weight: 600; font-size: 1.1rem; background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(8px); transition: transform .25s, box-shadow .25s, background .25s; }
+  .btn:hover, .btn:focus-visible { transform: translateY(-3px) scale(1.03); background: rgba(157,106,217,.35);
+    box-shadow: 0 10px 40px rgba(157,106,217,.55); outline: none; }
+  .btn svg { width: 22px; height: 22px; fill: currentColor; }
+  .ghost { position: absolute; right: -2vw; bottom: 2vh; font: 800 24vw/1 Syne, system-ui, sans-serif; letter-spacing: -.06em;
+    color: transparent; -webkit-text-stroke: 1px rgba(157,106,217,.22); pointer-events: none; user-select: none;
+    transform: translateX(calc(var(--p, 0) * -6vw)); }
+  .dots { position: absolute; right: 22px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 12px; }
+  .dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.25); transition: .3s; }
+  .dots i.on { background: #d18bff; box-shadow: 0 0 14px #d18bff; transform: scale(1.5); }
+  @media (max-width: 700px) { .stage { padding: 0 7vw; } .ghost { font-size: 40vw; } }
 </style>
 </head>
 <body>
@@ -39,21 +59,35 @@
 <div id="scroll"><canvas id="c"></canvas></div>
 <div class="hint" id="hint">Scroll</div>
 
+<div id="load"><span>CHARON</span></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="gh" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></symbol>
+  <symbol id="tg" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></symbol>
+  <symbol id="ar" viewBox="0 0 24 24"><path d="M5 12h12m-5-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
 <div class="end" id="end">
-  <h1>charon.gay</h1>
-  <nav class="links">
-    <a href="https://github.com/cchhaarroonn" aria-label="GitHub" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-    </a>
-    <!-- TODO: put your Steam profile URL here -->
-    <a href="https://steamcommunity.com/" aria-label="Steam" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 1a11 11 0 1 0 10.9 12.4L17 11.1a4 4 0 1 0-3.6-5.2 4 4 0 0 0 .1 2.4l-3.6 1.5a3 3 0 1 0 .9 2.3l3.3-1.4a4 4 0 0 0 6.2-1.2l.8.3A9 9 0 1 1 12 3zm5.5 4.3a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4zM8 13.4a1.8 1.8 0 1 1-1.2 3.3l1 .4a1.4 1.4 0 1 0 .2-2.7z"/></svg>
-    </a>
-    <!-- TODO: put your Telegram username here, e.g. https://t.me/yourname -->
-    <a href="https://t.me/" aria-label="Telegram" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
-    </a>
-  </nav>
+  <section class="stage">
+    <span class="ghost">code</span>
+    <p class="cmd" data-t="$ git log --author=charon"></p>
+    <h2>My code<br>lives on GitHub.</h2>
+    <p class="sub">Projects, experiments and the source of this very website.</p>
+    <a class="btn" href="https://github.com/cchhaarroonn" target="_blank" rel="noopener"><svg><use href="#gh"/></svg>cchhaarroonn<svg><use href="#ar"/></svg></a>
+  </section>
+  <section class="stage">
+    <span class="ghost">kishin</span>
+    <p class="cmd" data-t="$ ./kishin --start"></p>
+    <h2>Kishin.</h2>
+    <p class="sub">A SkyBlock core for Paper 1.21. Islands, teams, banks, levels and lootboxes, built from scratch in Java 21.</p>
+    <a class="btn" href="https://kishin.lol" target="_blank" rel="noopener">kishin.lol<svg><use href="#ar"/></svg></a>
+  </section>
+  <section class="stage">
+    <span class="ghost">hello</span>
+    <p class="cmd" data-t="$ contact --telegram"></p>
+    <h2>Say hi.</h2>
+    <p class="sub">Questions, ideas or a collab. The fastest way to reach me is Telegram.</p>
+    <a class="btn" href="https://t.me/charoncic" target="_blank" rel="noopener"><svg><use href="#tg"/></svg>@charoncic<svg><use href="#ar"/></svg></a>
+  </section>
+  <div class="dots"><i></i><i></i><i></i></div>
 </div>
 
 <script type="importmap">
@@ -293,16 +327,38 @@ const scroller = document.getElementById('scroll'), end = document.getElementByI
 let target = 0, cur = 0;
 const read = () => { target = Math.min(1, Math.max(0, scrollY / (scroller.offsetHeight - innerHeight))); };
 addEventListener('scroll', read); read();
-document.getElementById('skip').onclick = () => scrollTo({ top: scroller.offsetHeight, behavior: 'smooth' });
+document.getElementById('skip').onclick = () => scrollTo({ top: (scroller.offsetHeight - innerHeight) * .72, behavior: 'smooth' });
 
+const stages = [...document.querySelectorAll('.stage')], dots = [...document.querySelectorAll('.dots i')], load = document.getElementById('load');
+stages.forEach(st => { st._cmd = st.querySelector('.cmd'); st._txt = st._cmd.dataset.t; st._t0 = null; });
+addEventListener('pointermove', e => { end.style.setProperty('--mx', e.clientX + 'px'); end.style.setProperty('--my', e.clientY + 'px'); });
+function updateStages(q, now) {
+  const n = stages.length;
+  stages.forEach((st, i) => {
+    const l = q * n - i + .22, inn = S(0, .18, l), out = i < n - 1 ? S(.86, 1, l) : 0, v = inn * (1 - out);
+    st.style.opacity = v;
+    st.style.transform = `translateY(${(1 - inn) * 46 - out * 46}px) scale(${.96 + .04 * inn})`;
+    st.style.filter = v > .99 ? 'none' : `blur(${(1 - v) * 14}px)`;
+    st.style.pointerEvents = v > .6 ? 'auto' : 'none';
+    st.style.setProperty('--p', Math.min(1, Math.max(0, l - .2)));
+    if (v > .3 && st._t0 === null) st._t0 = now; if (v < .05) st._t0 = null;
+    const k = st._t0 === null ? 0 : Math.min(st._txt.length, Math.floor((now - st._t0) / 38));
+    st._cmd.textContent = st._txt.slice(0, k) + (v > .05 && Math.floor(now / 500) % 2 === 0 ? '\u258c' : '');
+  });
+  dots.forEach((d, i) => d.classList.toggle('on', Math.min(n - 1, Math.floor(q * n)) === i));
+}
+let first = true;
 renderer.setAnimationLoop(t => {
   cur += (target - cur) * .07;
-  if (cur > .4) drawMain(t / 1000, cur);
-  pose(cur); placeCamera(cur);
-  const o = S(.9, .99, cur);
+  const sp = Math.min(1, cur / .7), q = Math.max(0, (cur - .7) / .3);
+  if (sp > .4) drawMain(t / 1000, sp);
+  pose(sp); placeCamera(sp);
+  const o = S(.9, .99, sp);
   end.style.opacity = o; end.classList.toggle('live', o > .9);
-  hint.style.opacity = cur < .02 ? .7 : 0;
+  updateStages(q, t);
+  hint.style.opacity = cur < .01 ? .7 : 0;
   composer ? composer.render() : renderer.render(scene, camera);
+  if (first) { first = false; load.style.opacity = 0; setTimeout(() => load.remove(), 800); }
 });
 </script>
 </body>
